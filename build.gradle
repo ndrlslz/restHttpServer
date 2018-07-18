@@ -1,17 +1,52 @@
-plugins {
-    id 'java-library'
-    id 'idea'
-}
+apply plugin: 'java'
+apply plugin: 'idea'
 
 dependencies {
-    api 'org.apache.commons:commons-math3:3.6.1'
+    compile 'io.netty:netty-all:4.1.10.Final'
+    compile 'io.rest-assured:rest-assured:3.0.6'
 
-    implementation 'com.google.guava:guava:23.0'
-    implementation 'io.netty:netty-all:4.1.10.Final'
-
-    testImplementation 'junit:junit:4.12'
+    testCompile 'junit:junit:4.12'
 }
+
 
 repositories {
     jcenter()
 }
+
+task wrapper(type: Wrapper) {
+   gradleVersion = '3.0'
+}
+
+configurations {
+    integrationTestCompile.extendsFrom testCompile
+    integrationTestRuntime.extendsFrom testRuntime
+}
+
+sourceSets {
+    test {
+        java {
+            srcDir 'src/test/unit/java'
+        }
+        resources {
+            srcDir 'src/test/unit/resources'
+        }
+    }
+
+    integrationTest {
+        java {
+            srcDir 'src/test/intg/java'
+        }
+        resources {
+            srcDir 'src/test/intg/resources'
+        }
+        compileClasspath += main.output + test.output
+        runtimeClasspath += main.output + test.output
+    }
+}
+
+task integrationTest(type: Test) {
+    testClassesDir = sourceSets.integrationTest.output.classesDir
+    classpath = sourceSets.integrationTest.runtimeClasspath
+}
+
+check.dependsOn integrationTest

@@ -1,6 +1,7 @@
 package com.ndrlslz.handler;
 
 @FunctionalInterface
-public interface Handler<I, O> {
-    O handle(I request);
+public interface Handler<T> {
+
+    void handle(T event);
 }
