@@ -1,6 +1,6 @@
 package com.ndrlslz;
 
-import com.ndrlslz.core.TinyHttpServer;
+import com.ndrlslz.core.RestHttpServer;
 import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
 import org.hamcrest.Matchers;
@@ -12,13 +12,13 @@ import java.util.concurrent.Executors;
 
 import static io.restassured.RestAssured.given;
 
-public class TinyHttpServerTest {
-    private static final int PORT = 8080;
-    private TinyHttpServer httpServer;
+public class RestHttpServerTest {
+    private static final int PORT = 8888;
+    private RestHttpServer httpServer;
 
     @Before
     public void setUp() throws Exception {
-        httpServer = Executors.newCachedThreadPool().submit(() -> TinyHttpServer
+        httpServer = Executors.newCachedThreadPool().submit(() -> RestHttpServer
                 .create()
                 .requestHandler(request -> null)
                 .listen(PORT)).get();

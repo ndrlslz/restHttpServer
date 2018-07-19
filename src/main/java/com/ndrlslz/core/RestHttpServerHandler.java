@@ -3,29 +3,26 @@ package com.ndrlslz.core;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
+import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.util.CharsetUtil;
-import io.netty.util.concurrent.EventExecutorGroup;
 
 import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.sun.deploy.net.HttpRequest.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaderNames.COOKIE;
+import static io.netty.handler.codec.http.HttpHeaderNames.*;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
-import static io.netty.handler.codec.http.HttpResponseStatus.BAD_REQUEST;
-import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
-import static io.netty.handler.codec.http.HttpResponseStatus.OK;
+import static io.netty.handler.codec.http.HttpResponseStatus.*;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static sun.tools.jconsole.Messages.CONNECTION;
+import static io.netty.handler.codec.http.cookie.ServerCookieDecoder.STRICT;
+import static io.netty.handler.codec.http.cookie.ServerCookieEncoder.LAX;
 
-public class TinyHttpServerHandler extends SimpleChannelInboundHandler {
+public class RestHttpServerHandler extends SimpleChannelInboundHandler {
 
     private static final String NEW_LINE = "\r\n";
     private HttpRequest request;
@@ -53,11 +50,11 @@ public class TinyHttpServerHandler extends SimpleChannelInboundHandler {
             headers.entries().forEach(entry ->
                     builder.append("Header ").append(entry.getKey()).append("=").append(entry.getValue()).append(NEW_LINE));
 
-            QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.getUri());
+            QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.uri());
             Map<String, List<String>> params = queryStringDecoder.parameters();
 
             if (!params.isEmpty()) {
-                for (Map.Entry<String, List<String>> p: params.entrySet()) {
+                for (Map.Entry<String, List<String>> p : params.entrySet()) {
                     String key = p.getKey();
                     List<String> vals = p.getValue();
                     for (String val : vals) {
@@ -84,6 +81,8 @@ public class TinyHttpServerHandler extends SimpleChannelInboundHandler {
             LastHttpContent lastHttpContent = (LastHttpContent) msg;
 
             if (!writeResponse(lastHttpContent, ctx)) {
+
+
                 // If keep-alive is off, close the connection once the content is fully written.
                 ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
             }
@@ -116,18 +115,22 @@ public class TinyHttpServerHandler extends SimpleChannelInboundHandler {
         // Encode the cookie.
         String cookieString = request.headers().get(COOKIE);
         if (cookieString != null) {
-            Set<Cookie> cookies = CookieDecoder.decode(cookieString);
+            Set<Cookie> cookies = STRICT.decode(cookieString);
             if (!cookies.isEmpty()) {
                 // Reset the cookies if necessary.
                 for (Cookie cookie : cookies) {
-                    response.headers().add(SET_COOKIE, ServerCookieEncoder.encode(cookie));
+                    response.headers().add(SET_COOKIE, LAX.encode(cookie));
                 }
+
             }
         } else {
             // Browser sent no cookie.  Add some.
-            response.headers().add(SET_COOKIE, ServerCookieEncoder.encode("key1", "value1"));
-            response.headers().add(SET_COOKIE, ServerCookieEncoder.encode("key2", "value2"));
+            response.headers().add(SET_COOKIE, LAX.encode("key3", "value1"));
+            response.headers().add(SET_COOKIE, LAX.encode("key3", "value2"));
         }
+        response.headers().add("test", "456");
+        response.headers().add("test", "4567");
+
 
         // Write the response.
         ctx.write(response);

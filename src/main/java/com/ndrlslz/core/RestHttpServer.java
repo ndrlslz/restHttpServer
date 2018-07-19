@@ -13,34 +13,34 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
-public class TinyHttpServer {
+public class RestHttpServer {
     private RequestHandler<HttpServerRequest, HttpServerResponse> requestRequestHandler;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
-    private TinyHttpServer() {
+    private RestHttpServer() {
 
     }
 
-    public static TinyHttpServer create() {
-        return new TinyHttpServer();
+    public static RestHttpServer create() {
+        return new RestHttpServer();
     }
 
-    public TinyHttpServer requestHandler(RequestHandler<HttpServerRequest, HttpServerResponse> requestHandler) {
+    public RestHttpServer requestHandler(RequestHandler<HttpServerRequest, HttpServerResponse> requestHandler) {
         this.requestRequestHandler = requestHandler;
         return this;
     }
 
-    public TinyHttpServer listen(int port, Handler<AsyncResult<TinyHttpServer>> handler) {
+    public RestHttpServer listen(int port, Handler<AsyncResult<RestHttpServer>> handler) {
         bossGroup = new NioEventLoopGroup();
         workerGroup = new NioEventLoopGroup();
-        AsyncResult<TinyHttpServer> result;
+        AsyncResult<RestHttpServer> result;
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
-                    .childHandler(new TinyHttpServerInitializer());
+                    .childHandler(new RestHttpServerInitializer());
 
             b.bind(port).sync();
 
@@ -58,7 +58,7 @@ public class TinyHttpServer {
         return this;
     }
 
-    public TinyHttpServer listen(int port) {
+    public RestHttpServer listen(int port) {
         listen(port, null);
         return this;
     }
