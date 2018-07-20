@@ -1,9 +1,7 @@
 package com.ndrlslz.common;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Consumer;
 
 public class MultiMap<K, V> implements Map<K, Collection<V>> {
     private HashMap<K, Collection<V>> map;
@@ -46,13 +44,23 @@ public class MultiMap<K, V> implements Map<K, Collection<V>> {
 
     @Override
     public Collection<V> put(K key, Collection<V> value) {
-        if (map.containsKey(key)) {
+        if (this.containsKey(key)) {
             map.get(key).addAll(value);
         } else {
             map.put(key, value);
         }
 
-        return map.get(key);
+        return this.get(key);
+    }
+
+    public void putSingleValue(K key, V value) {
+        if (map.containsKey(key)) {
+            map.get(key).add(value);
+        } else {
+            ArrayList<V> list = new ArrayList<>();
+            list.add(value);
+            map.put(key, list);
+        }
     }
 
     @Override
@@ -62,7 +70,8 @@ public class MultiMap<K, V> implements Map<K, Collection<V>> {
 
     @Override
     public void putAll(Map<? extends K, ? extends Collection<V>> m) {
-        map.putAll(m);
+        m.entrySet()
+                .forEach((Consumer<Entry<? extends K, ? extends Collection<V>>>) entry -> this.put(entry.getKey(), entry.getValue()));
     }
 
     @Override
