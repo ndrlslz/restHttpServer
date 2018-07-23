@@ -10,9 +10,9 @@ public class HttpServerRequest {
     private String uri;
     private HttpVersion protocolVersion;
     private HttpMethod method;
-    private CaseInsensitiveMultiMap<CharSequence> headers;
+    private CaseInsensitiveMultiMap<String> headers;
     private Map<String, String> pathParams;
-    private Map<String, String> queryParams;
+    private CaseInsensitiveMultiMap<String> queryParams;
     private String bodyAsString;
 
     public String getUri() {
@@ -39,11 +39,11 @@ public class HttpServerRequest {
         this.method = method;
     }
 
-    public CaseInsensitiveMultiMap<CharSequence> getHeaders() {
+    public CaseInsensitiveMultiMap<String> getHeaders() {
         return headers;
     }
 
-    public void setHeaders(CaseInsensitiveMultiMap<CharSequence> headers) {
+    public void setHeaders(CaseInsensitiveMultiMap<String> headers) {
         this.headers = headers;
     }
 
@@ -55,11 +55,11 @@ public class HttpServerRequest {
         this.pathParams = pathParams;
     }
 
-    public Map<String, String> getQueryParams() {
+    public CaseInsensitiveMultiMap<String> getQueryParams() {
         return queryParams;
     }
 
-    public void setQueryParams(Map<String, String> queryParams) {
+    public void setQueryParams(CaseInsensitiveMultiMap<String> queryParams) {
         this.queryParams = queryParams;
     }
 

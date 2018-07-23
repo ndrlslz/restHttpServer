@@ -10,7 +10,6 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.QueryStringDecoder;
 
 import java.nio.charset.Charset;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,18 +38,18 @@ public class HttpServerRequestDecoder extends MessageToMessageDecoder<HttpMessag
     }
 
     private void assembleQueryParams(HttpRequest request) {
-        HashMap<String, String> queryMap = new HashMap<>();
+        CaseInsensitiveMultiMap<String> queryMap = new CaseInsensitiveMultiMap<>();
         Map<String, List<String>> params = new QueryStringDecoder(request.uri()).parameters();
 
         if (!params.isEmpty()) {
-            params.forEach((key, value1) -> value1.forEach(value -> queryMap.put(key, value)));
+            params.forEach((key, values) -> values.forEach(value -> queryMap.put(key, value)));
         }
 
         httpServerRequest.setQueryParams(queryMap);
     }
 
     private void assembleHeaders(HttpRequest request) {
-        CaseInsensitiveMultiMap<CharSequence> headers = new CaseInsensitiveMultiMap<>();
+        CaseInsensitiveMultiMap<String> headers = new CaseInsensitiveMultiMap<>();
         request.headers().entries().forEach(entry -> headers.put(entry.getKey(), entry.getValue()));
         httpServerRequest.setHeaders(headers);
     }

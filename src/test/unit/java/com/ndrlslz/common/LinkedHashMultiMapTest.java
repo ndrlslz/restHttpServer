@@ -22,39 +22,39 @@ public class LinkedHashMultiMapTest {
 
     @Test
     public void shouldGetSizeOfMultiMap() {
-        map.put("key1", listOf("123", "456"));
-        map.put("key2", listOf("789"));
-        map.put("key3", listOf("a", "b", "c"));
+        map.put("key1", setOf("123", "456"));
+        map.put("key2", setOf("789"));
+        map.put("key3", setOf("a", "b", "c"));
 
         assertThat(map.size(), is(6));
     }
 
     @Test
     public void shouldNotBeEmpty() {
-        map.put("key1", listOf("value1"));
+        map.put("key1", setOf("value1"));
 
         assertThat(map.isEmpty(), is(false));
     }
 
     @Test
     public void shouldContainsKey() {
-        map.put("key1", listOf("value1"));
+        map.put("key1", setOf("value1"));
 
         assertThat(map.containsKey("key1"), is(true));
     }
 
     @Test
     public void shouldContainsValues() {
-        map.put("key1", listOf("123", "456"));
-        map.put("key2", listOf("678"));
-        map.put("key3", listOf("a", "b", "c"));
+        map.put("key1", setOf("123", "456"));
+        map.put("key2", setOf("678"));
+        map.put("key3", setOf("a", "b", "c"));
 
         assertThat(map.containsValue("c"), is(true));
     }
 
     @Test
     public void shouldGetValueByKey() {
-        map.put("key1", listOf("123", "456"));
+        map.put("key1", setOf("123", "456"));
         map.put("key2", "value2");
 
         assertThat(map.get("key1"), is("123"));
@@ -63,14 +63,14 @@ public class LinkedHashMultiMapTest {
 
     @Test
     public void shouldGetDefaultValueByKey() {
-        map.put("key1", listOf("123", "456"));
+        map.put("key1", setOf("123", "456"));
 
         assertThat(map.get("key3", "default"), is("default"));
     }
 
     @Test
     public void shouldGetAllByKey() {
-        map.put("key1", listOf("123", "456"));
+        map.put("key1", setOf("123", "456"));
         map.put("key2", "value2");
 
         assertThat(map.getAll("key1"), hasItems("123", "456"));
@@ -79,27 +79,28 @@ public class LinkedHashMultiMapTest {
 
     @Test
     public void shouldGetValues() {
-        map.put("key1", listOf("123", "456"));
-        map.put("key2", listOf("value2"));
+        map.put("key1", setOf("123", "456"));
+        map.put("key2", setOf("value2"));
 
         Collection<Collection<CharSequence>> values = map.values();
 
-        assertThat(values, hasItems(singletonList("value2")));
-        assertThat(values, hasItems(asList("123", "456")));
+        assertThat(values, hasItems(setOf("value2")));
+        assertThat(values, hasItems(setOf("123", "456")));
     }
 
     @Test
     public void shouldPutValues() {
-        map.put("key1", listOf("value1", "value2"));
-        map.put("key1", listOf("value3"));
-        map.put("key2", listOf("value4", "value5"));
+        map.put("key1", setOf("value1", "value2"));
+        map.put("key1", setOf("value3"));
+        map.put("key2", setOf("value4", "value5"));
 
-        assertThat(map.getAll("key1"), is(asList("value1", "value2", "value3")));
-        assertThat(map.getAll("key2"), is(asList("value4", "value5")));
+        assertThat(map.getAll("key1"), hasItems("value1", "value2", "value3"));
+        assertThat(map.getAll("key2"), hasItems("value4", "value5"));
     }
 
     @Test
     public void shouldPutValue() {
+        map.put("key1", setOf("value1"));
         map.put("key1", "value1");
         map.put("key1", "value2");
         map.put("key3", "value4");
@@ -110,7 +111,7 @@ public class LinkedHashMultiMapTest {
 
     @Test
     public void shouldRemoveKey() {
-        map.put("key1", listOf("value1", "value2"));
+        map.put("key1", setOf("value1", "value2"));
 
         map.remove("key1");
 
@@ -120,21 +121,21 @@ public class LinkedHashMultiMapTest {
     @Test
     public void shouldPutAll() {
         HashMap<CharSequence, Collection<CharSequence>> map = new HashMap<>();
-        map.put("key1", listOf("value1"));
-        map.put("key2", listOf("value2", "value3"));
-        this.map.put("key2", listOf("value4"));
+        map.put("key1", setOf("value1"));
+        map.put("key2", setOf("value2", "value3"));
+        this.map.put("key2", setOf("value4"));
 
         this.map.putAll(map);
 
         assertThat(this.map.size(), is(4));
-        assertThat(this.map.getAll("key1"), is(singletonList("value1")));
+        assertThat(this.map.getAll("key1"), is(setOf("value1")));
         assertThat(this.map.getAll("key2"), hasItems("value2", "value3", "value4"));
     }
 
     @Test
     public void shouldClear() {
-        map.put("key1", listOf("123", "456"));
-        map.put("key2", listOf("value2"));
+        map.put("key1", setOf("123", "456"));
+        map.put("key2", setOf("value2"));
 
         map.clear();
 
@@ -143,8 +144,8 @@ public class LinkedHashMultiMapTest {
 
     @Test
     public void shouldGetKeySet() {
-        map.put("key1", listOf("123", "456"));
-        map.put("key2", listOf("value2"));
+        map.put("key1", setOf("123", "456"));
+        map.put("key2", setOf("value2"));
 
         Set<CharSequence> keySet = map.keySet();
 
@@ -153,8 +154,8 @@ public class LinkedHashMultiMapTest {
 
     @Test
     public void shouldGetEntrySet() {
-        map.put("key1", listOf("123", "456"));
-        map.put("key2", listOf("value2"));
+        map.put("key1", setOf("123", "456"));
+        map.put("key2", setOf("value2"));
 
         Set<Map.Entry<CharSequence, Collection<CharSequence>>> entries = map.entrySet();
 
@@ -164,15 +165,15 @@ public class LinkedHashMultiMapTest {
     @Test
     public void shouldIterateMultiMap() {
         AtomicInteger sum = new AtomicInteger(0);
-        map.put("key1", listOf("123", "456"));
-        map.put("key2", listOf("value2"));
+        map.put("key1", setOf("123", "456"));
+        map.put("key2", setOf("value2"));
 
         map.each((key, value) -> sum.incrementAndGet());
 
         assertThat(sum.get(), is(3));
     }
 
-    private ArrayList<CharSequence> listOf(CharSequence... values) {
-        return new ArrayList<>(Arrays.asList(values));
+    private Set<CharSequence> setOf(CharSequence... values) {
+        return new HashSet<>(asList(values));
     }
 }

@@ -21,7 +21,7 @@ public class CaseInsensitiveMultiMapTest {
 
     @Test
     public void getAll() {
-        map.put("Connection", "keep-alive");
+        map.put("connection", "keep-alive");
         map.put("connection", "close");
 
         assertThat(map.getAll("connection"), hasItems("keep-alive", "close"));
@@ -29,25 +29,26 @@ public class CaseInsensitiveMultiMapTest {
 
     @Test
     public void get() {
-        map.put("Connection", "keep-alive");
+        map.put("KEY", "Upper");
+        map.put("key", "Lower");
 
-        assertThat(map.get("connection"), is("keep-alive"));
+        assertThat(map.get("key"), is("Lower"));
+        assertThat(map.get("Key"), is("Upper"));
     }
 
     @Test
     public void putSingleValue() {
         map.put("Connection", "keep-alive");
 
-
         assertThat(map.get("CONNECtion"), is("keep-alive"));
     }
 
     @Test
     public void putValues() {
-        map.put("Key1", listOf("value1", "value2"));
-        map.put("Key2", listOf("value3"));
+        map.put("Key1", setOf("value1", "value2"));
+        map.put("Key2", setOf("value3"));
 
-        assertThat(map.get("key1"), is("value1"));
+        assertThat(map.getAll("key1"), hasItems("value1", "value2"));
         assertThat(map.get("key2"), is("value3"));
     }
 
@@ -63,16 +64,16 @@ public class CaseInsensitiveMultiMapTest {
     @Test
     public void putAll() {
         Map<CharSequence, Collection<CharSequence>> anotherMap = new HashMap<>();
-        anotherMap.put("Key1", listOf("value1", "value2"));
-        anotherMap.put("Key2", listOf("value3"));
+        anotherMap.put("Key1", setOf("value1", "value2"));
+        anotherMap.put("Key2", setOf("value3"));
 
         map.putAll(anotherMap);
 
-        assertThat(map.get("key1"), is("value1"));
+        assertThat(map.getAll("key1"), hasItems("value1", "value2"));
         assertThat(map.get("key2"), is("value3"));
     }
 
-    private ArrayList<CharSequence> listOf(CharSequence... values) {
-        return new ArrayList<>(Arrays.asList(values));
+    private Set<CharSequence> setOf(CharSequence... values) {
+        return new HashSet<>(Arrays.asList(values));
     }
 }

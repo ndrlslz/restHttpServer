@@ -1,8 +1,9 @@
 package com.ndrlslz.core;
 
-import com.ndrlslz.common.Function;
 import com.ndrlslz.model.HttpServerRequest;
+import com.ndrlslz.model.HttpServerResponse;
 import com.ndrlslz.utils.HttpUtils;
+import com.sun.net.httpserver.HttpServer;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -26,6 +27,7 @@ public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServe
     private static final String NEW_LINE = "\r\n";
     private HttpRequest request;
     private StringBuilder builder = new StringBuilder();
+//    private HttpServerResponse response = new HttpServerResponse();
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpServerRequest request) {
@@ -48,6 +50,17 @@ public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServe
 
         request.getHeaders().each((key, value) -> builder.append("Header: ").append(key).append("=").append(value).append(NEW_LINE));
 
+        request.getQueryParams().each((key, value) -> builder.append("Query: ").append(key).append("=").append(value).append(NEW_LINE));
+
+        builder.append("Test: ").append("key").append("=").append(request.getQueryParams().get("key"));
+
+//        response.setProtocolVersion(HTTP_1_1);
+//        response.headers().put(CONTENT_TYPE, "text/plain; charset=UTF-8");
+//        response.setStatusCode(OK.code());
+//        response.setBodyAsString(builder.toString());
+
+
+//        ctx.writeAndFlush(response);
         FullHttpResponse response = new DefaultFullHttpResponse(
                 HTTP_1_1, OK,
                 Unpooled.copiedBuffer(builder.toString(), CharsetUtil.UTF_8));
@@ -56,19 +69,19 @@ public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServe
 
         response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
 
-        ctx.writeAndFlush(response);
+        ctx.write(response);
+//
+//        if (request.getHeaders().get("connection") == null ||
+//                !request.getHeaders().get("connection").contentEquals(HttpHeaderValues.KEEP_ALIVE)) {
+//
 
-        if (request.getHeaders().get("connection") == null ||
-                !request.getHeaders().get("connection").equals(HttpHeaderValues.KEEP_ALIVE)) {
-
-
-            ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-        }
-
-        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-        // Add keep alive header as per:
-        // - http://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01.html#Connection
-        response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+        ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+//        }
+//
+//        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+//         Add keep alive header as per:
+//         - http://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01.html#Connection
+//        response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
 
 //
 //            HttpHeaders headers = request.headers();
