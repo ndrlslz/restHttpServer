@@ -1,102 +1,38 @@
 package com.ndrlslz.common;
 
-import java.util.*;
-import java.util.function.Consumer;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
-public class MultiMap<K, V> implements Map<K, Collection<V>> {
-    private HashMap<K, Collection<V>> map;
+public interface MultiMap<K, V> {
+    int size();
 
-    MultiMap() {
-        this.map = new HashMap<>();
-    }
+    boolean isEmpty();
 
-    @Override
-    public int size() {
-        return map
-                .values()
-                .stream()
-                .mapToInt(Collection::size).sum();
-    }
+    boolean containsKey(K key);
 
-    @Override
-    public boolean isEmpty() {
-        return map.isEmpty();
-    }
+    boolean containsValue(V value);
 
-    @Override
-    public boolean containsKey(Object key) {
-        return map.containsKey(key);
-    }
+    Collection<V> getAll(K key);
 
-    @Override
-    public boolean containsValue(Object value) {
-        return map
-                .values()
-                .stream()
-                .flatMap(Collection::stream)
-                .anyMatch(v -> v.equals(value));
-    }
+    V get(K key);
 
-    @Override
-    public Collection<V> get(Object key) {
-        return map.get(key);
-    }
+    Collection<V> put(K key, Collection<V> value);
 
-    @Override
-    public Collection<V> put(K key, Collection<V> value) {
-        if (this.containsKey(key)) {
-            map.get(key).addAll(value);
-        } else {
-            map.put(key, value);
-        }
+    void put(K key, V value);
 
-        return this.get(key);
-    }
+    Collection<V> remove(K key);
 
-    public void putSingleValue(K key, V value) {
-        if (map.containsKey(key)) {
-            map.get(key).add(value);
-        } else {
-            ArrayList<V> list = new ArrayList<>();
-            list.add(value);
-            map.put(key, list);
-        }
-    }
+    void putAll(Map<? extends K, ? extends Collection<V>> m);
 
-    @Override
-    public Collection<V> remove(Object key) {
-        return map.remove(key);
-    }
+    void clear();
 
-    @Override
-    public void putAll(Map<? extends K, ? extends Collection<V>> m) {
-        m.entrySet()
-                .forEach((Consumer<Entry<? extends K, ? extends Collection<V>>>) entry -> this.put(entry.getKey(), entry.getValue()));
-    }
+    Set<K> keySet();
 
-    @Override
-    public void clear() {
-        map.clear();
-    }
+    Collection<Collection<V>> values();
 
-    @Override
-    public Set<K> keySet() {
-        return map.keySet();
-    }
+    Set<Map.Entry<K, Collection<V>>> entrySet();
 
-    @Override
-    public Collection<Collection<V>> values() {
-        return map.values();
-    }
+    void each(Function<K, V> function);
 
-    @Override
-    public Set<Entry<K, Collection<V>>> entrySet() {
-        return map.entrySet();
-    }
-
-    public void each(Function<K, V> function) {
-        map.forEach((k, vs) -> vs.forEach(v -> {
-            function.apply(k, v);
-        }));
-    }
 }

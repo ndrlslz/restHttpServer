@@ -1,6 +1,8 @@
 package com.ndrlslz.core;
 
-import io.netty.buffer.ByteBuf;
+import com.ndrlslz.common.Function;
+import com.ndrlslz.model.HttpServerRequest;
+import com.ndrlslz.utils.HttpUtils;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -9,9 +11,6 @@ import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.util.CharsetUtil;
 
-import java.nio.charset.Charset;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.*;
@@ -22,71 +21,99 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static io.netty.handler.codec.http.cookie.ServerCookieDecoder.STRICT;
 import static io.netty.handler.codec.http.cookie.ServerCookieEncoder.LAX;
 
-public class RestHttpServerHandler extends SimpleChannelInboundHandler {
+public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServerRequest> {
 
     private static final String NEW_LINE = "\r\n";
     private HttpRequest request;
     private StringBuilder builder = new StringBuilder();
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
+    protected void channelRead0(ChannelHandlerContext ctx, HttpServerRequest request) {
+//        if (msg instanceof HttpRequest) {
+//            HttpRequest request = (HttpRequest) msg;
+//            this.request = request;
+//
+//
+        if (HttpUtils.is100ContinueExpected(request)) {
+            send100Continue(ctx);
+        }
+//
 
-        if (msg instanceof HttpRequest) {
-            HttpRequest request = (HttpRequest) msg;
-            this.request = request;
+        builder.append("Hello World").append(NEW_LINE);
+        builder.append("Protocol Version: ").append(request.getProtocolVersion()).append(NEW_LINE);
+        builder.append("Host: ").append(request.getHeaders().get("host")).append(NEW_LINE);
+        builder.append("URI: ").append(request.getUri()).append(NEW_LINE);
+        builder.append("Method: ").append(request.getMethod()).append(NEW_LINE);
+        builder.append("Content: ").append(request.getBodyAsString()).append(NEW_LINE);
+
+        request.getHeaders().each((key, value) -> builder.append("Header: ").append(key).append("=").append(value).append(NEW_LINE));
+
+        FullHttpResponse response = new DefaultFullHttpResponse(
+                HTTP_1_1, OK,
+                Unpooled.copiedBuffer(builder.toString(), CharsetUtil.UTF_8));
+
+        response.setProtocolVersion(request.getProtocolVersion());
+
+        response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
+
+        ctx.writeAndFlush(response);
+
+        if (request.getHeaders().get("connection") == null ||
+                !request.getHeaders().get("connection").equals(HttpHeaderValues.KEEP_ALIVE)) {
 
 
-            if (HttpUtil.is100ContinueExpected(request)) {
-                send100Continue(ctx);
-            }
-
-            builder.append("Hello World").append(NEW_LINE);
-            builder.append("Protocol Version: ").append(request.protocolVersion()).append(NEW_LINE);
-            builder.append("Host: ").append(request.headers().get(HttpHeaderNames.HOST, "unknown")).append(NEW_LINE);
-            builder.append("URI: ").append(request.uri()).append(NEW_LINE);
-            builder.append("Method: ").append(request.method()).append(NEW_LINE);
-
-            HttpHeaders headers = request.headers();
-            headers.entries().forEach(entry ->
-                    builder.append("Header ").append(entry.getKey()).append("=").append(entry.getValue()).append(NEW_LINE));
-
-            QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.uri());
-            Map<String, List<String>> params = queryStringDecoder.parameters();
-
-            if (!params.isEmpty()) {
-                for (Map.Entry<String, List<String>> p : params.entrySet()) {
-                    String key = p.getKey();
-                    List<String> vals = p.getValue();
-                    for (String val : vals) {
-                        builder.append("PARAM: ").append(key).append(" = ").append(val).append("\r\n");
-                    }
-                }
-                builder.append("\r\n");
-            }
-
+            ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }
 
-        if (msg instanceof HttpContent) {
-            HttpContent content = (HttpContent) msg;
+        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+        // Add keep alive header as per:
+        // - http://www.w3.org/Protocols/HTTP/1.1/draft-ietf-http-v11-spec-01.html#Connection
+        response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE);
 
-            ByteBuf byteBuf = content.content();
-
-            if (byteBuf.isReadable()) {
-                builder.append("CONTENT: ").append(byteBuf.toString(Charset.defaultCharset())).append(NEW_LINE);
-            }
-
-        }
-
-        if (msg instanceof LastHttpContent) {
-            LastHttpContent lastHttpContent = (LastHttpContent) msg;
-
-            if (!writeResponse(lastHttpContent, ctx)) {
-
-
-                // If keep-alive is off, close the connection once the content is fully written.
-                ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-            }
-        }
+//
+//            HttpHeaders headers = request.headers();
+//            headers.entries().forEach(entry ->
+//                    builder.append("Header ").append(entry.getKey()).append("=").append(entry.getValue()).append(NEW_LINE));
+//
+//            QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.uri());
+//
+//
+//            Map<String, List<String>> params = queryStringDecoder.parameters();
+//
+//            if (!params.isEmpty()) {
+//                for (Map.Entry<String, List<String>> p : params.entrySet()) {
+//                    String key = p.getKey();
+//                    List<String> vals = p.getValue();
+//                    for (String val : vals) {
+//                        builder.append("PARAM: ").append(key).append(" = ").append(val).append("\r\n");
+//                    }
+//                }
+//                builder.append("\r\n");
+//            }
+//
+//        }
+//
+//        if (msg instanceof HttpContent) {
+//            HttpContent content = (HttpContent) msg;
+//
+//            ByteBuf byteBuf = content.content();
+//
+//            if (byteBuf.isReadable()) {
+//                builder.append("CONTENT: ").append(byteBuf.toString(Charset.defaultCharset())).append(NEW_LINE);
+//            }
+//
+//        }
+//
+//        if (msg instanceof LastHttpContent) {
+//            LastHttpContent lastHttpContent = (LastHttpContent) msg;
+//
+//            if (!writeResponse(lastHttpContent, ctx)) {
+//
+//
+//                // If keep-alive is off, close the connection once the content is fully written.
+//                ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+//            }
+//        }
     }
 
     private static void send100Continue(ChannelHandlerContext ctx) {
@@ -136,6 +163,7 @@ public class RestHttpServerHandler extends SimpleChannelInboundHandler {
         ctx.write(response);
 
         return false;
-
     }
+
+
 }
