@@ -11,9 +11,9 @@ public class RestHttpServerInitializer extends ChannelInitializer {
     @Override
     protected void initChannel(Channel ch) {
         ch.pipeline().addLast(new HttpRequestDecoder());
-        ch.pipeline().addLast(new HttpResponseEncoder());
         ch.pipeline().addLast(new HttpServerRequestDecoder());
+        ch.pipeline().addLast(new HttpResponseEncoder());
+        ch.pipeline().addLast(new HttpServerResponseEncoder());
         ch.pipeline().addLast(new RestHttpServerHandler());
-//        ch.pipeline().addLast(new HttpServerResponseEncoder());
     }
 }
