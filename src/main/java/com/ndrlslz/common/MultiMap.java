@@ -17,13 +17,13 @@ public interface MultiMap<K, V> {
 
     V get(K key);
 
-    Collection<V> put(K key, Collection<V> value);
+    Collection<V> set(K key, Collection<V> value);
 
-    void put(K key, V value);
+    void set(K key, V value);
 
     Collection<V> remove(K key);
 
-    void putAll(Map<? extends K, ? extends Collection<V>> m);
+    void setAll(Map<? extends K, ? extends Collection<V>> m);
 
     void clear();
 

@@ -23,9 +23,13 @@ public class HttpServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
 
         assembleQueryParams(request);
 
-        httpServerRequest.setBodyAsString(request.content().toString(Charset.defaultCharset()));
+        assembleBody(request);
 
         out.add(httpServerRequest);
+    }
+
+    private void assembleBody(FullHttpRequest request) {
+        httpServerRequest.setBodyAsString(request.content().toString(Charset.defaultCharset()));
     }
 
     private void assembleQueryParams(HttpRequest request) {
@@ -33,7 +37,7 @@ public class HttpServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         Map<String, List<String>> params = new QueryStringDecoder(request.uri()).parameters();
 
         if (!params.isEmpty()) {
-            params.forEach((key, value1) -> value1.forEach(value -> queryMap.put(key, value)));
+            params.forEach((key, value1) -> value1.forEach(value -> queryMap.set(key, value)));
         }
 
         httpServerRequest.setQueryParams(queryMap);
@@ -41,7 +45,7 @@ public class HttpServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
 
     private void assembleHeaders(HttpRequest request) {
         CaseInsensitiveMultiMap<String> headers = new CaseInsensitiveMultiMap<>();
-        request.headers().entries().forEach(entry -> headers.put(entry.getKey(), entry.getValue()));
+        request.headers().entries().forEach(entry -> headers.set(entry.getKey(), entry.getValue()));
         httpServerRequest.setHeaders(headers);
     }
 
@@ -49,5 +53,6 @@ public class HttpServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         httpServerRequest.setMethod(request.method());
         httpServerRequest.setProtocolVersion(request.protocolVersion());
         httpServerRequest.setUri(request.uri());
+        httpServerRequest.setDecoderResult(request.decoderResult());
     }
 }

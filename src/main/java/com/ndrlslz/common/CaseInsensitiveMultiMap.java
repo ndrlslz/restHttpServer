@@ -28,15 +28,15 @@ public class CaseInsensitiveMultiMap<V> extends LinkedHashMultiMap<CharSequence,
     }
 
     @Override
-    public Collection<V> put(CharSequence key, Collection<V> value) {
-        upperKeyMultiMap.put(key.toString().toLowerCase(), value);
-        return super.put(key, value);
+    public Collection<V> set(CharSequence key, Collection<V> value) {
+        upperKeyMultiMap.set(key.toString().toLowerCase(), value);
+        return super.set(key, value);
     }
 
     @Override
-    public void put(CharSequence key, V value) {
-        upperKeyMultiMap.put(key.toString().toLowerCase(), value);
-        super.put(key, value);
+    public void set(CharSequence key, V value) {
+        upperKeyMultiMap.set(key.toString().toLowerCase(), value);
+        super.set(key, value);
     }
 
     @Override
@@ -46,10 +46,10 @@ public class CaseInsensitiveMultiMap<V> extends LinkedHashMultiMap<CharSequence,
     }
 
     @Override
-    public void putAll(Map<? extends CharSequence, ? extends Collection<V>> m) {
+    public void setAll(Map<? extends CharSequence, ? extends Collection<V>> m) {
         m.entrySet()
                 .forEach((Consumer<Map.Entry<? extends CharSequence, ? extends Collection<V>>>) entry ->
-                        put(entry.getKey().toString().toLowerCase(), entry.getValue()));
-        super.putAll(m);
+                        set(entry.getKey().toString().toLowerCase(), entry.getValue()));
+        super.setAll(m);
     }
 }

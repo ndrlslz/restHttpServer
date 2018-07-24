@@ -1,6 +1,6 @@
 package com.ndrlslz.core;
 
-import com.ndrlslz.exception.TinyHttpServerException;
+import com.ndrlslz.exception.RestHttpServerException;
 import com.ndrlslz.handler.Handler;
 import com.ndrlslz.handler.RequestHandler;
 import com.ndrlslz.model.AsyncResult;
@@ -47,8 +47,8 @@ public class RestHttpServer {
             result = AsyncResult.success(this);
 
         } catch (InterruptedException e) {
-            TinyHttpServerException tinyHttpServerException = new TinyHttpServerException("Tiny http server startup fail.", e);
-            result = AsyncResult.fail(tinyHttpServerException);
+            RestHttpServerException restHttpServerException = new RestHttpServerException("Rest http server startup fail.", e);
+            result = AsyncResult.fail(restHttpServerException);
         }
 
         if (handler != null) {

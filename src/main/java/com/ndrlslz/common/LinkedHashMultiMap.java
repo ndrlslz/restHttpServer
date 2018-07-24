@@ -57,7 +57,7 @@ public class LinkedHashMultiMap<K, V> implements MultiMap<K, V> {
     }
 
     @Override
-    public Collection<V> put(K key, Collection<V> value) {
+    public Collection<V> set(K key, Collection<V> value) {
         if (map.containsKey(key)) {
             map.get(key).addAll(value);
         } else {
@@ -68,7 +68,7 @@ public class LinkedHashMultiMap<K, V> implements MultiMap<K, V> {
     }
 
     @Override
-    public void put(K key, V value) {
+    public void set(K key, V value) {
         if (map.containsKey(key)) {
             map.get(key).add(value);
         } else {
@@ -84,10 +84,10 @@ public class LinkedHashMultiMap<K, V> implements MultiMap<K, V> {
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends Collection<V>> m) {
+    public void setAll(Map<? extends K, ? extends Collection<V>> m) {
         m.entrySet()
                 .forEach((Consumer<Map.Entry<? extends K, ? extends Collection<V>>>) entry ->
-                        put(entry.getKey(), entry.getValue()));
+                        set(entry.getKey(), entry.getValue()));
     }
 
     @Override

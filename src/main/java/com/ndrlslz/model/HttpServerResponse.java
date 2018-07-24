@@ -1,13 +1,15 @@
 package com.ndrlslz.model;
 
 import com.ndrlslz.common.CaseInsensitiveMultiMap;
+import io.netty.handler.codec.DecoderResult;
 import io.netty.handler.codec.http.HttpVersion;
 
-public class HttpServerResponse {
+public class HttpServerResponse implements HttpServerMessage {
     private int statusCode;
     private HttpVersion protocolVersion;
     private CaseInsensitiveMultiMap<String> headers = new CaseInsensitiveMultiMap<>();
     private String bodyAsString;
+    private DecoderResult decoderResult;
 
     public int getStatusCode() {
         return statusCode;
@@ -17,6 +19,7 @@ public class HttpServerResponse {
         this.statusCode = statusCode;
     }
 
+    @Override
     public HttpVersion getProtocolVersion() {
         return protocolVersion;
     }
@@ -25,8 +28,18 @@ public class HttpServerResponse {
         this.protocolVersion = protocolVersion;
     }
 
+    @Override
     public CaseInsensitiveMultiMap<String> headers() {
         return headers;
+    }
+
+    @Override
+    public DecoderResult decoderResult() {
+        return decoderResult;
+    }
+
+    public void setDecoderResult(DecoderResult decoderResult) {
+        this.decoderResult = decoderResult;
     }
 
     public void setHeaders(CaseInsensitiveMultiMap<String> headers) {
