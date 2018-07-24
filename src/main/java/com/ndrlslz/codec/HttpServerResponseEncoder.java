@@ -11,6 +11,8 @@ import io.netty.util.CharsetUtil;
 
 import java.util.List;
 
+import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+
 public class HttpServerResponseEncoder extends MessageToMessageEncoder<HttpServerResponse> {
 
     @Override
@@ -19,6 +21,7 @@ public class HttpServerResponseEncoder extends MessageToMessageEncoder<HttpServe
                 HttpResponseStatus.valueOf(msg.getStatusCode()),
                 Unpooled.copiedBuffer(msg.getBodyAsString(), CharsetUtil.UTF_8));
 
+        defaultFullHttpResponse.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
         ctx.write(defaultFullHttpResponse);
         ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
     }

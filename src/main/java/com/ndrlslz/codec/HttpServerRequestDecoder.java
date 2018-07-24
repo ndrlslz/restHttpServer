@@ -4,8 +4,7 @@ import com.ndrlslz.common.CaseInsensitiveMultiMap;
 import com.ndrlslz.model.HttpServerRequest;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
-import io.netty.handler.codec.http.HttpContent;
-import io.netty.handler.codec.http.HttpMessage;
+import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.QueryStringDecoder;
 
@@ -13,26 +12,18 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.Map;
 
-public class HttpServerRequestDecoder extends MessageToMessageDecoder<HttpMessage> {
+public class HttpServerRequestDecoder extends MessageToMessageDecoder<FullHttpRequest> {
     private HttpServerRequest httpServerRequest = new HttpServerRequest();
 
     @Override
-    protected void decode(ChannelHandlerContext ctx, HttpMessage message, List<Object> out) {
-        if (message instanceof HttpRequest) {
-            HttpRequest request = (HttpRequest) message;
+    protected void decode(ChannelHandlerContext ctx, FullHttpRequest request, List<Object> out) {
+        assembleBasicInfo(request);
 
-            assembleBasicInfo(request);
+        assembleHeaders(request);
 
-            assembleHeaders(request);
+        assembleQueryParams(request);
 
-            assembleQueryParams(request);
-        }
-
-        if (message instanceof HttpContent) {
-            HttpContent content = (HttpContent) message;
-
-            httpServerRequest.setBodyAsString(content.content().toString(Charset.defaultCharset()));
-        }
+        httpServerRequest.setBodyAsString(request.content().toString(Charset.defaultCharset()));
 
         out.add(httpServerRequest);
     }
@@ -42,7 +33,7 @@ public class HttpServerRequestDecoder extends MessageToMessageDecoder<HttpMessag
         Map<String, List<String>> params = new QueryStringDecoder(request.uri()).parameters();
 
         if (!params.isEmpty()) {
-            params.forEach((key, values) -> values.forEach(value -> queryMap.put(key, value)));
+            params.forEach((key, value1) -> value1.forEach(value -> queryMap.put(key, value)));
         }
 
         httpServerRequest.setQueryParams(queryMap);
