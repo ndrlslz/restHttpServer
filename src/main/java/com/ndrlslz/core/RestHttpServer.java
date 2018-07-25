@@ -14,7 +14,7 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
 public class RestHttpServer {
-    private RequestHandler<HttpServerRequest, HttpServerResponse> requestRequestHandler;
+    private RequestHandler<HttpServerRequest, HttpServerResponse> requestHandler;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
@@ -27,7 +27,7 @@ public class RestHttpServer {
     }
 
     public RestHttpServer requestHandler(RequestHandler<HttpServerRequest, HttpServerResponse> requestHandler) {
-        this.requestRequestHandler = requestHandler;
+        this.requestHandler = requestHandler;
         return this;
     }
 
@@ -40,7 +40,7 @@ public class RestHttpServer {
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
-                    .childHandler(new RestHttpServerInitializer());
+                    .childHandler(new RestHttpServerInitializer(requestHandler));
 
             b.bind(port).sync();
 

@@ -1,6 +1,7 @@
 package com.ndrlslz;
 
 import com.ndrlslz.core.RestHttpServer;
+import com.ndrlslz.router.RouterTable;
 import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
 import org.hamcrest.Matchers;
@@ -18,9 +19,13 @@ public class RestHttpServerTest {
 
     @Before
     public void setUp() throws Exception {
+        RouterTable routerTable = new RouterTable();
+
+        routerTable.router("/").handler(context -> System.out.println(context.request().getUri()));
+
         httpServer = Executors.newCachedThreadPool().submit(() -> RestHttpServer
                 .create()
-                .requestHandler(request -> null)
+                .requestHandler(routerTable)
                 .listen(PORT)).get();
 
         RestAssured.baseURI = "http://localhost";
@@ -35,12 +40,24 @@ public class RestHttpServerTest {
     }
 
     @Test
-    public void test() {
+    public void get() {
         given()
                 .when()
                 .get("/test")
                 .then()
                 .statusCode(200)
                 .body("html.body", Matchers.containsString("Hello World"));
+    }
+
+    @Test
+    public void post() {
+        given()
+                .body("{\"test\": 123}")
+                .when()
+                .post("/test")
+                .then()
+                .statusCode(200)
+                .body("html.body", Matchers.containsString("Hello World"))
+                .body("html.body", Matchers.containsString("Content: {\"test\": 123}"));
     }
 }

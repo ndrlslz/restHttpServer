@@ -1,5 +1,6 @@
 package com.ndrlslz.core;
 
+import com.ndrlslz.handler.RequestHandler;
 import com.ndrlslz.model.HttpServerRequest;
 import com.ndrlslz.model.HttpServerResponse;
 import com.ndrlslz.utils.HttpUtils;
@@ -21,11 +22,14 @@ import static io.netty.handler.codec.http.cookie.ServerCookieDecoder.STRICT;
 import static io.netty.handler.codec.http.cookie.ServerCookieEncoder.LAX;
 
 public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServerRequest> {
-
     private static final String NEW_LINE = "\r\n";
     private HttpRequest request;
     private StringBuilder builder = new StringBuilder();
-    private HttpServerResponse response = new HttpServerResponse();
+    private RequestHandler<HttpServerRequest, HttpServerResponse> requestHandler;
+
+    public RestHttpServerHandler(RequestHandler<HttpServerRequest, HttpServerResponse> requestHandler) {
+        this.requestHandler = requestHandler;
+    }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, HttpServerRequest request) {
@@ -33,31 +37,34 @@ public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServe
             send100Continue(ctx, request);
         }
 
-        builder.append("Hello World").append(NEW_LINE);
-        builder.append("Protocol Version: ").append(request.getProtocolVersion()).append(NEW_LINE);
-        builder.append("Host: ").append(request.headers().get("host")).append(NEW_LINE);
-        builder.append("URI: ").append(request.getUri()).append(NEW_LINE);
-        builder.append("Method: ").append(request.getMethod()).append(NEW_LINE);
-        builder.append("Content: ").append(request.getBodyAsString()).append(NEW_LINE);
-
-        request.headers().each((key, value) -> builder.append("Header: ").append(key).append("=").append(value).append(NEW_LINE));
-
-        request.getQueryParams().each((key, value) -> builder.append("Query: ").append(key).append("=").append(value).append(NEW_LINE));
-
-        builder.append("Test: ").append("key").append("=").append(request.getQueryParams().get("key")).append(NEW_LINE);
-
-        builder.append("DecoderResult: ").append(request.decoderResult()).append(NEW_LINE);
-
-        response.setProtocolVersion(HTTP_1_1);
-        response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
-        response.setStatusCode(OK.code());
-        response.setBodyAsString(builder.toString());
-        response.setDecoderResult(request.decoderResult());
+//        builder.append("Hello World").append(NEW_LINE);
+//        builder.append("Protocol Version: ").append(request.getProtocolVersion()).append(NEW_LINE);
+//        builder.append("Host: ").append(request.headers().get("host")).append(NEW_LINE);
+//        builder.append("URI: ").append(request.getUri()).append(NEW_LINE);
+//        builder.append("Method: ").append(request.getMethod()).append(NEW_LINE);
+//        builder.append("Content: ").append(request.getBodyAsString()).append(NEW_LINE);
+//
+//        request.headers().each((key, value) -> builder.append("Header: ").append(key).append("=").append(value).append(NEW_LINE));
+//
+//        request.getQueryParams().each((key, value) -> builder.append("Query: ").append(key).append("=").append(value).append(NEW_LINE));
+//
+//        builder.append("Test: ").append("key").append("=").append(request.getQueryParams().get("key")).append(NEW_LINE);
+//
+//        builder.append("DecoderResult: ").append(request.decoderResult()).append(NEW_LINE);
 
 
-        if (HttpUtils.isKeepAlive(request)) {
-            response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE.toString());
-        }
+        HttpServerResponse response = requestHandler.handle(request);
+
+//        response.setProtocolVersion(HTTP_1_1);
+//        response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
+//        response.setStatusCode(OK.code());
+//        response.setBodyAsString(builder.toString());
+//        response.setDecoderResult(request.decoderResult());
+//
+//
+//        if (HttpUtils.isKeepAlive(request)) {
+//            response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE.toString());
+//        }
         ctx.writeAndFlush(response);
     }
 

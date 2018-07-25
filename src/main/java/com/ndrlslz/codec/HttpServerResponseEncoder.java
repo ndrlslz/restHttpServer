@@ -19,7 +19,7 @@ public class HttpServerResponseEncoder extends MessageToMessageEncoder<HttpServe
     protected void encode(ChannelHandlerContext ctx, HttpServerResponse httpServerResponse, List<Object> out) {
         DefaultFullHttpResponse response = new DefaultFullHttpResponse(httpServerResponse.getProtocolVersion(),
                 HttpResponseStatus.valueOf(httpServerResponse.getStatusCode()),
-                Unpooled.copiedBuffer(httpServerResponse.getBodyAsString(), CharsetUtil.UTF_8));
+                httpServerResponse.body());
 
         response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
 
