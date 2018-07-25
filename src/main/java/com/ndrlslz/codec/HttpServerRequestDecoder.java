@@ -21,7 +21,7 @@ public class HttpServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
 
         assembleHeaders(request);
 
-        assembleQueryParams(request);
+        assemblePathAndQueryParams(request);
 
         assembleBody(request);
 
@@ -32,15 +32,17 @@ public class HttpServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         httpServerRequest.setBodyAsString(request.content().toString(Charset.defaultCharset()));
     }
 
-    private void assembleQueryParams(HttpRequest request) {
+    private void assemblePathAndQueryParams(HttpRequest request) {
         CaseInsensitiveMultiMap<String> queryMap = new CaseInsensitiveMultiMap<>();
-        Map<String, List<String>> params = new QueryStringDecoder(request.uri()).parameters();
+        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(request.uri());
+        Map<String, List<String>> params = queryStringDecoder.parameters();
 
         if (!params.isEmpty()) {
             params.forEach((key, value1) -> value1.forEach(value -> queryMap.set(key, value)));
         }
 
         httpServerRequest.setQueryParams(queryMap);
+        httpServerRequest.setPath(queryStringDecoder.path());
     }
 
     private void assembleHeaders(HttpRequest request) {

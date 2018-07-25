@@ -5,6 +5,7 @@ import com.ndrlslz.model.HttpServerRequest;
 import com.ndrlslz.model.HttpServerResponse;
 import com.ndrlslz.utils.HttpUtils;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
@@ -68,6 +69,11 @@ public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServe
         ctx.writeAndFlush(response);
     }
 
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+        ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+    }
+
     private static void send100Continue(ChannelHandlerContext ctx, HttpServerRequest request) {
         FullHttpResponse response = new DefaultFullHttpResponse(request.getProtocolVersion(), CONTINUE);
         ctx.write(response);
@@ -116,6 +122,7 @@ public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServe
 
         return false;
     }
+
 
 
 }

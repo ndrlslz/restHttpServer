@@ -5,11 +5,13 @@ import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.DecoderResult;
 import io.netty.handler.codec.http.HttpVersion;
 
+import java.util.Objects;
+
 public class HttpServerResponse implements HttpServerMessage {
     private int statusCode;
     private HttpVersion protocolVersion;
     private CaseInsensitiveMultiMap<String> headers = new CaseInsensitiveMultiMap<>();
-    private ByteBuf body;
+    private String body;
     private DecoderResult decoderResult;
 
     public int getStatusCode() {
@@ -47,11 +49,11 @@ public class HttpServerResponse implements HttpServerMessage {
         this.headers = headers;
     }
 
-    public ByteBuf body() {
+    public String getBody() {
         return body;
     }
 
-    public void setBody(ByteBuf body) {
+    public void setBody(String body) {
         this.body = body;
     }
 }
