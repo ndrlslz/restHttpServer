@@ -1,13 +1,9 @@
 package com.ndrlslz;
 
 import com.ndrlslz.core.RestHttpServer;
-import com.ndrlslz.handler.Handler;
 import com.ndrlslz.model.HttpServerRequest;
-import com.ndrlslz.router.RouterContext;
 import com.ndrlslz.router.RouterTable;
-import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.http.HttpMethod;
-import io.netty.util.CharsetUtil;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON;
@@ -18,6 +14,12 @@ public class Test {
 
         routerTable.router("/orders", HttpMethod.GET).handler(context -> {
             context.response().setBody("{\"name\": \"car\", \"price\" : 123}");
+            context.response().headers().set(CONTENT_TYPE, APPLICATION_JSON.toString());
+        });
+
+        routerTable.router("/orders/{id}").handler(context -> {
+            String id = context.request().getPathParams().get("id");
+            context.response().setBody("{\"name\": \"car\", \"price\" : 123, \"id\": \"" + id + "\"}");
             context.response().headers().set(CONTENT_TYPE, APPLICATION_JSON.toString());
         });
 

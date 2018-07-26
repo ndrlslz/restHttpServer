@@ -19,6 +19,7 @@ public class HttpServerResponseEncoder extends MessageToMessageEncoder<HttpServe
     @Override
     protected void encode(ChannelHandlerContext ctx, HttpServerResponse httpServerResponse, List<Object> out) {
 
+        //TODO handle null exception if getBody() return null
         DefaultFullHttpResponse response = new DefaultFullHttpResponse(httpServerResponse.getProtocolVersion(),
                 HttpResponseStatus.valueOf(httpServerResponse.getStatusCode()),
                 Unpooled.copiedBuffer(httpServerResponse.getBody(), CharsetUtil.UTF_8));

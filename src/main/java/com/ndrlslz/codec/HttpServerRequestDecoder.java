@@ -9,6 +9,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.QueryStringDecoder;
 
 import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,5 +57,6 @@ public class HttpServerRequestDecoder extends MessageToMessageDecoder<FullHttpRe
         httpServerRequest.setProtocolVersion(request.protocolVersion());
         httpServerRequest.setUri(request.uri());
         httpServerRequest.setDecoderResult(request.decoderResult());
+        httpServerRequest.setPathParams(new HashMap<>());
     }
 }

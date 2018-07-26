@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
@@ -96,11 +97,6 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
 
     @Override
     public HttpServerResponse handle(HttpServerRequest request) {
-        //        httpServerResponse.setProtocolVersion(HTTP_1_1);
-//        httpServerResponse.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
-//        httpServerResponse.setStatusCode(OK.code());
-//        httpServerResponse.setBody(Unpooled.EMPTY_BUFFER);
-
         RouterContext routerContext = new RouterContext(request, new HttpServerResponse());
 
         globalRouters.forEach(router -> router.getHandler().handle(routerContext));
@@ -110,6 +106,7 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
                 .filter(routerThatMatchPathOf(request)).collect(Collectors.toList());
 
         if (matchedRouters.isEmpty()) {
+            //TODO Response builder to create response
             HttpServerResponse exceptionResponse = new HttpServerResponse();
             exceptionResponse.setStatusCode(500);
             exceptionResponse.setProtocolVersion(request.getProtocolVersion());
@@ -118,7 +115,20 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
             return exceptionResponse;
         }
 
-        matchedRouters.forEach(router -> router.getHandler().handle(routerContext));
+        matchedRouters.forEach(router -> {
+            Matcher matcher = router.getRegexPattern().matcher(request.getPath());
+
+            if (matcher.find()) {
+                try {
+                    routerContext.request().getPathParams().clear();
+                    router.getGroups().forEach(key -> routerContext.request().getPathParams().put(key, matcher.group(key)));
+                } catch (Exception ignored) {
+                    ignored.printStackTrace();
+                }
+            }
+
+            router.getHandler().handle(routerContext);
+        });
 
 //        String NEW_LINE = "\r\n";
 //        StringBuilder builder = new StringBuilder();
@@ -158,6 +168,6 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
     }
 
     private Predicate<Router> routerThatMatchPathOf(HttpServerRequest request) {
-        return router -> router.getPath().equals(request.getPath());
+        return router -> router.getRegexPattern().matcher(request.getPath()).find();
     }
 }

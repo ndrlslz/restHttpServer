@@ -13,28 +13,20 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.concurrent.Executors;
-
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class RestHttpServerTest {
     private static final int PORT = 8888;
     private RestHttpServer httpServer;
+    private RouterTable routerTable;
 
     @Before
     public void setUp() {
-        RouterTable routerTable = new RouterTable();
-
-        routerTable.get("/testGet").handler(requestHandler());
-        routerTable.post("/testPost").handler(requestHandler());
-
-        routerTable.router("/orders", HttpMethod.GET).handler(context -> {
-            context.response().setBody("{\"name\": \"car\", \"price\" : 123}");
-            context.response().headers().set(CONTENT_TYPE, APPLICATION_JSON.toString());
-        });
+        routerTable = new RouterTable();
 
         httpServer = RestHttpServer
                 .create()
@@ -44,7 +36,6 @@ public class RestHttpServerTest {
         RestAssured.baseURI = "http://localhost";
         RestAssured.port = PORT;
         RestAssured.registerParser("text/plain", Parser.HTML);
-
     }
 
     private Handler<RouterContext> requestHandler() {
@@ -79,6 +70,8 @@ public class RestHttpServerTest {
 
     @Test
     public void get() {
+        routerTable.get("/testGet").handler(requestHandler());
+
         given()
                 .when()
                 .get("/testGet")
@@ -89,6 +82,9 @@ public class RestHttpServerTest {
 
     @Test
     public void post() {
+        routerTable.post("/testPost").handler(requestHandler());
+
+
         given()
                 .body("{\"test\": 123}")
                 .when()
@@ -101,6 +97,11 @@ public class RestHttpServerTest {
 
     @Test
     public void testGetOrders() {
+        routerTable.router("/orders", HttpMethod.GET).handler(context -> {
+            context.response().setBody("{\"name\": \"car\", \"price\" : 123}");
+            context.response().headers().set(CONTENT_TYPE, APPLICATION_JSON.toString());
+        });
+
         given()
                 .when()
                 .get("/orders")
@@ -108,5 +109,25 @@ public class RestHttpServerTest {
                 .statusCode(200)
                 .body("name", is("car"))
                 .body("price", is(123));
+    }
+
+    @Test
+    public void testGetOrdersWithPathParams() {
+        routerTable.router("/customers/{customerID}/orders/{orderID}").handler(context -> {
+            assertThat(context.request().getPathParams().get("customerID"), is("100"));
+            assertThat(context.request().getPathParams().get("orderID"), is("ABC"));
+
+            context.response().setBody("{\"name\": \"car\", \"price\" : 123}");
+            context.response().headers().set(CONTENT_TYPE, APPLICATION_JSON.toString());
+        });
+
+        given()
+                .when()
+                .get("/customers/100/orders/ABC")
+                .then()
+                .statusCode(200)
+                .body("name", is("car"))
+                .body("price", is(123));
+
     }
 }
