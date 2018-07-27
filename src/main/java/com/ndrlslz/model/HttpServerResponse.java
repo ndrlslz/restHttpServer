@@ -1,11 +1,8 @@
 package com.ndrlslz.model;
 
 import com.ndrlslz.common.CaseInsensitiveMultiMap;
-import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.DecoderResult;
 import io.netty.handler.codec.http.HttpVersion;
-
-import java.util.Objects;
 
 public class HttpServerResponse implements HttpServerMessage {
     private int statusCode;

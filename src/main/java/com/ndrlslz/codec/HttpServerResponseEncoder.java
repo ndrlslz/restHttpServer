@@ -1,38 +1,47 @@
 package com.ndrlslz.codec;
 
 import com.ndrlslz.model.HttpServerResponse;
+import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.netty.util.CharsetUtil;
 
+import java.nio.charset.Charset;
 import java.util.List;
+import java.util.Objects;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static java.util.Objects.nonNull;
 
 public class HttpServerResponseEncoder extends MessageToMessageEncoder<HttpServerResponse> {
 
     @Override
     protected void encode(ChannelHandlerContext ctx, HttpServerResponse httpServerResponse, List<Object> out) {
 
-        //TODO handle null exception if getBody() return null
+        if (nonNull(httpServerResponse.decoderResult()) && httpServerResponse.decoderResult().isFailure()) {
+            DefaultFullHttpResponse response = new DefaultFullHttpResponse(httpServerResponse.getProtocolVersion(),
+                    HttpResponseStatus.BAD_REQUEST,
+                    Unpooled.copiedBuffer("Cannot deserializable request", Charset.defaultCharset()));
+
+            ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        }
+
+        ByteBuf body = httpServerResponse.getBody() == null ?
+                Unpooled.EMPTY_BUFFER :
+                Unpooled.copiedBuffer(httpServerResponse.getBody(), Charset.defaultCharset());
+
         DefaultFullHttpResponse response = new DefaultFullHttpResponse(httpServerResponse.getProtocolVersion(),
                 HttpResponseStatus.valueOf(httpServerResponse.getStatusCode()),
-                Unpooled.copiedBuffer(httpServerResponse.getBody(), CharsetUtil.UTF_8));
+                body);
 
-        response.headers().set(CONTENT_TYPE, "text/plain; charset=UTF-8");
         response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
+
         httpServerResponse.headers().each((key, value) -> response.headers().set(key, value));
 
-        ctx.write(response);
-
-//        if (!HttpUtils.isKeepAlive(httpServerResponse)) {
-        ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-//        }
+        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
 
     @Override

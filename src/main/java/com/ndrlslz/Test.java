@@ -12,13 +12,16 @@ public class Test {
     public static void main(String[] args) {
         RouterTable routerTable = new RouterTable();
 
+        routerTable.router("/empty").handler(context -> context.response().headers().set("key", "value"));
+
+
         routerTable.router("/orders", HttpMethod.GET).handler(context -> {
             context.response().setBody("{\"name\": \"car\", \"price\" : 123}");
             context.response().headers().set(CONTENT_TYPE, APPLICATION_JSON.toString());
         });
 
-        routerTable.router("/orders/{id}").handler(context -> {
-            String id = context.request().getPathParams().get("id");
+        routerTable.router("/orders/{order_id}").handler(context -> {
+            String id = context.request().getPathParams().get("order_id");
             context.response().setBody("{\"name\": \"car\", \"price\" : 123, \"id\": \"" + id + "\"}");
             context.response().headers().set(CONTENT_TYPE, APPLICATION_JSON.toString());
         });

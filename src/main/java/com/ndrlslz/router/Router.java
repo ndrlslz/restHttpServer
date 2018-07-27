@@ -3,19 +3,20 @@ package com.ndrlslz.router;
 import com.ndrlslz.handler.Handler;
 import io.netty.handler.codec.http.HttpMethod;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.lang.String.format;
 
 public class Router {
+    private static final Pattern PATH_PARAM_PATTERN = Pattern.compile("\\{([A-Za-z][A-Za-z0-9_]*)}");
     private String path;
     private HttpMethod httpMethod;
     private Handler<RouterContext> handler;
     private Pattern regexPattern;
-    private Set<String> groups;
+    private List<String> groups;
 
     public String getPath() {
         return path;
@@ -42,7 +43,7 @@ public class Router {
         this.handler = handler;
     }
 
-    public Set<String> getGroups() {
+    public List<String> getGroups() {
         return groups;
     }
 
@@ -51,18 +52,18 @@ public class Router {
     }
 
     private void setRegexPattern(String path) {
-        path = format("^%s$", path);
-        Pattern p = Pattern.compile("\\{([A-Za-z][A-Za-z0-9_]*)}");
-        Matcher m = p.matcher(path);
+        Matcher m = PATH_PARAM_PATTERN.matcher(format("^%s$", path));
 
         StringBuffer sb = new StringBuffer();
 
-        groups = new HashSet<>();
+        groups = new ArrayList<>();
+        int index = 0;
         while (m.find()) {
-            m.appendReplacement(sb, "(?<$1>[^/]+)");
+            m.appendReplacement(sb, format("(?<param%s>[^/]+)", index));
             String group = m.group();
 
             groups.add(group.substring(1, group.length() - 1));
+            index++;
         }
 
         m.appendTail(sb);

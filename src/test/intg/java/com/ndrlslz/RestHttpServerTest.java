@@ -15,6 +15,7 @@ import org.junit.Test;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON;
+import static io.netty.handler.codec.http.HttpHeaderValues.TEXT_PLAIN;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -59,6 +60,7 @@ public class RestHttpServerTest {
 
             builder.append("DecoderResult: ").append(request.decoderResult()).append(NEW_LINE);
 
+            context.response().headers().set(CONTENT_TYPE, TEXT_PLAIN.toString());
             context.response().setBody(builder.toString());
         };
     }
@@ -113,9 +115,9 @@ public class RestHttpServerTest {
 
     @Test
     public void testGetOrdersWithPathParams() {
-        routerTable.router("/customers/{customerID}/orders/{orderID}").handler(context -> {
-            assertThat(context.request().getPathParams().get("customerID"), is("100"));
-            assertThat(context.request().getPathParams().get("orderID"), is("ABC"));
+        routerTable.router("/customers/{customer_id}/orders/{order_id}").handler(context -> {
+            assertThat(context.request().getPathParams().get("customer_id"), is("100"));
+            assertThat(context.request().getPathParams().get("order_id"), is("ABC"));
 
             context.response().setBody("{\"name\": \"car\", \"price\" : 123}");
             context.response().headers().set(CONTENT_TYPE, APPLICATION_JSON.toString());
@@ -129,5 +131,54 @@ public class RestHttpServerTest {
                 .body("name", is("car"))
                 .body("price", is(123));
 
+    }
+
+    @Test
+    public void testGetCustomersWithQueryParams() {
+        routerTable.router("/customers").handler(context -> {
+            String name = context.request().getQueryParams().get("name");
+            String age = context.request().getQueryParams().get("age");
+
+            assertThat(name, is("Tom"));
+            assertThat(age, is("20"));
+
+            context.response().setBody("{\"name\": \"" + name + "\", \"age\": " + age + "}");
+        });
+
+        given()
+                .log()
+                .all()
+                .expect()
+                .log()
+                .all()
+                .when()
+                .get("/customers?name=Tom&age=20")
+                .then()
+                .statusCode(200)
+                .body("name", is("Tom"))
+                .body("age", is(20));
+    }
+
+    @Test
+    public void shouldReturnCannotFindRouter() {
+        given()
+                .when()
+                .get("/test")
+                .then()
+                .statusCode(500)
+                .body("html.body", is("Cannot find available router"));
+
+    }
+
+    @Test
+    public void testEmptyResponseBody() {
+        routerTable.router("/empty").handler(context -> context.response().headers().set("key", "value"));
+
+        given()
+                .when()
+                .get("/empty?name=Tom&age=20")
+                .then()
+                .statusCode(200)
+                .header("key", is("value"));
     }
 }

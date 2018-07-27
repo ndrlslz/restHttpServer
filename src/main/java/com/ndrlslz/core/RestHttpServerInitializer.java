@@ -7,6 +7,7 @@ import com.ndrlslz.model.HttpServerRequest;
 import com.ndrlslz.model.HttpServerResponse;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 
@@ -20,10 +21,11 @@ public class RestHttpServerInitializer extends ChannelInitializer {
 
     @Override
     protected void initChannel(Channel ch) {
-        ch.pipeline().addLast(new HttpServerCodec());
-        ch.pipeline().addLast(new HttpObjectAggregator(MAX_CONTENT_LENGTH));
-        ch.pipeline().addLast(new HttpServerRequestDecoder());
-        ch.pipeline().addLast(new HttpServerResponseEncoder());
-        ch.pipeline().addLast(new RestHttpServerHandler(requestHandler));
+        ChannelPipeline pipeline = ch.pipeline();
+        pipeline.addLast(new HttpServerCodec());
+        pipeline.addLast(new HttpObjectAggregator(MAX_CONTENT_LENGTH));
+        pipeline.addLast(new HttpServerRequestDecoder());
+        pipeline.addLast(new HttpServerResponseEncoder());
+        pipeline.addLast(new RestHttpServerHandler(requestHandler));
     }
 }
