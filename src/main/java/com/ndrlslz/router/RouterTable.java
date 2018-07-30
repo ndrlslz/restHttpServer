@@ -1,7 +1,9 @@
 package com.ndrlslz.router;
 
+import com.ndrlslz.exception.RestHttpServerException;
 import com.ndrlslz.handler.Handler;
 import com.ndrlslz.handler.RequestHandler;
+import com.ndrlslz.json.Json;
 import com.ndrlslz.model.HttpServerRequest;
 import com.ndrlslz.model.HttpServerResponse;
 import com.ndrlslz.utils.HttpServerResponseBuilder;
@@ -16,10 +18,11 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
+import static com.ndrlslz.utils.ErrorBuilder.newBuilder;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON;
-import static io.netty.handler.codec.http.HttpHeaderValues.TEXT_PLAIN;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static java.util.Objects.isNull;
 
@@ -110,10 +113,11 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
         if (matchedRouters.isEmpty()) {
             return HttpServerResponseBuilder.internalServerError()
                     .withRequest(request)
-                    .withHeader(CONTENT_TYPE, TEXT_PLAIN)
-                    .withBody("Cannot find available router")
+                    .withBody(Json.encode(newBuilder()
+                            .withMessage("Cannot find available router")
+                            .withStatus(INTERNAL_SERVER_ERROR.code())
+                            .withUri(request.getUri())))
                     .build();
-            //TODO return json string error
         }
 
         matchedRouters.forEach(router -> {
@@ -126,8 +130,8 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
                         String key = router.getGroups().get(i);
                         routerContext.request().getPathParams().put(key, matcher.group("param" + i));
                     }
-                } catch (Exception ignored) {
-                    ignored.printStackTrace();
+                } catch (Exception exception) {
+                    throw new RestHttpServerException("Encounter error when retrieve path parameters", exception);
                 }
             }
 

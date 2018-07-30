@@ -32,6 +32,7 @@ public class RestHttpServer {
     }
 
     public RestHttpServer listen(int port, Handler<AsyncResult<RestHttpServer>> handler) {
+
         bossGroup = new NioEventLoopGroup();
         workerGroup = new NioEventLoopGroup();
         AsyncResult<RestHttpServer> result;
@@ -59,8 +60,7 @@ public class RestHttpServer {
     }
 
     public RestHttpServer listen(int port) {
-        listen(port, null);
-        return this;
+        return listen(port, null);
     }
 
     public void close() {

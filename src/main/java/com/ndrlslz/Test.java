@@ -1,6 +1,8 @@
 package com.ndrlslz;
 
 import com.ndrlslz.core.RestHttpServer;
+import com.ndrlslz.handler.Handler;
+import com.ndrlslz.model.AsyncResult;
 import com.ndrlslz.model.HttpServerRequest;
 import com.ndrlslz.router.RouterTable;
 import io.netty.handler.codec.http.HttpMethod;
@@ -54,6 +56,6 @@ public class Test {
         RestHttpServer
                 .create()
                 .requestHandler(routerTable)
-                .listen(8080);
+                .listen(8080, result -> System.out.println(result.succeeded()));
     }
 }

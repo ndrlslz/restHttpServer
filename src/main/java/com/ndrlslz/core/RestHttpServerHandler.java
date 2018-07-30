@@ -1,25 +1,22 @@
 package com.ndrlslz.core;
 
 import com.ndrlslz.handler.RequestHandler;
+import com.ndrlslz.json.Json;
 import com.ndrlslz.model.HttpServerRequest;
 import com.ndrlslz.model.HttpServerResponse;
 import com.ndrlslz.utils.HttpUtils;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.handler.codec.http.*;
-import io.netty.handler.codec.http.cookie.Cookie;
-import io.netty.util.CharsetUtil;
+import io.netty.handler.codec.http.DefaultFullHttpResponse;
+import io.netty.handler.codec.http.FullHttpResponse;
 
-import java.util.Set;
+import java.nio.charset.Charset;
 
-import static io.netty.handler.codec.http.HttpHeaderNames.*;
-import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static io.netty.handler.codec.http.HttpHeaders.Names.SET_COOKIE;
-import static io.netty.handler.codec.http.HttpResponseStatus.*;
-import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static io.netty.handler.codec.http.cookie.ServerCookieDecoder.STRICT;
-import static io.netty.handler.codec.http.cookie.ServerCookieEncoder.LAX;
+import static com.ndrlslz.utils.ErrorBuilder.newBuilder;
+import static io.netty.buffer.Unpooled.copiedBuffer;
+import static io.netty.channel.ChannelFutureListener.CLOSE;
+import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 
 public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServerRequest> {
     private RequestHandler<HttpServerRequest, HttpServerResponse> requestHandler;
@@ -37,11 +34,21 @@ public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServe
         HttpServerResponse response = requestHandler.handle(request);
 
         ctx.writeAndFlush(response);
+//
+//        throw new RuntimeException("test");
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        ctx.close();
+        //TODO this is not working currently if above throw exception. it cannot write result to client.
+        cause.printStackTrace();
+        ctx
+                .writeAndFlush(copiedBuffer(Json.encode(newBuilder()
+                        .withException(cause.getClass().getName())
+                        .withMessage(cause.getMessage())
+                        .withStatus(INTERNAL_SERVER_ERROR.code())
+                        .build()), Charset.defaultCharset()))
+                .addListener(CLOSE);
     }
 
     private static void send100Continue(ChannelHandlerContext ctx, HttpServerRequest request) {

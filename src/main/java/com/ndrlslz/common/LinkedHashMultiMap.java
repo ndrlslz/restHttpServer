@@ -6,7 +6,7 @@ import java.util.function.Consumer;
 public class LinkedHashMultiMap<K, V> implements MultiMap<K, V> {
     private LinkedHashMap<K, Collection<V>> map;
 
-    public LinkedHashMultiMap() {
+    LinkedHashMultiMap() {
         this.map = new LinkedHashMap<>();
     }
 

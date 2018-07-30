@@ -166,7 +166,8 @@ public class RestHttpServerTest {
                 .get("/test")
                 .then()
                 .statusCode(500)
-                .body("html.body", is("Cannot find available router"));
+                .body("error.message", is("Cannot find available router"))
+                .body("error.status", is(500));
 
     }
 

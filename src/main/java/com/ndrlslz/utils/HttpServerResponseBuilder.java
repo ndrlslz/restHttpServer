@@ -2,11 +2,15 @@ package com.ndrlslz.utils;
 
 import com.ndrlslz.model.HttpServerRequest;
 import com.ndrlslz.model.HttpServerResponse;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.AsciiString;
 
 import java.util.Collection;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderValues.APPLICATION_JSON;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 
@@ -15,6 +19,7 @@ public class HttpServerResponseBuilder {
 
     private HttpServerResponseBuilder() {
         httpServerResponse = new HttpServerResponse();
+        withHeader(CONTENT_TYPE, APPLICATION_JSON);
     }
 
     public static HttpServerResponseBuilder newBuilder() {
@@ -39,12 +44,12 @@ public class HttpServerResponseBuilder {
         return this;
     }
 
-    public HttpServerResponseBuilder withHeader(String key, AsciiString value) {
+    public HttpServerResponseBuilder withHeader(AsciiString key, AsciiString value) {
         httpServerResponse.headers().set(key, value.toString());
         return this;
     }
 
-    public HttpServerResponseBuilder withHeader(String key, Collection<AsciiString> value) {
+    public HttpServerResponseBuilder withHeader(AsciiString key, Collection<AsciiString> value) {
         httpServerResponse.headers().set(key, value.toString());
         return this;
     }

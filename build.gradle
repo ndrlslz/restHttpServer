@@ -4,6 +4,7 @@ apply plugin: 'idea'
 dependencies {
     compile 'io.netty:netty-all:4.1.10.Final'
     compile 'io.rest-assured:rest-assured:3.0.6'
+    compile 'com.google.code.gson:gson:2.8.5'
 
     testCompile 'junit:junit:4.12'
 }
