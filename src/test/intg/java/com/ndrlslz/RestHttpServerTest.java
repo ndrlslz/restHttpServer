@@ -160,7 +160,7 @@ public class RestHttpServerTest {
     }
 
     @Test
-    public void shouldReturnCannotFindRouter() {
+    public void shouldReturnCannotFindRouterError() {
         given()
                 .when()
                 .get("/test")
@@ -169,6 +169,20 @@ public class RestHttpServerTest {
                 .body("error.message", is("Cannot find available router"))
                 .body("error.status", is(500));
 
+    }
+
+    @Test
+    public void shouldReturnFindMultipleRoutersError() {
+        routerTable.get("/customers").handler(null);
+        routerTable.router("/customers").handler(null);
+
+        given()
+                .when()
+                .get("/customers")
+                .then()
+                .statusCode(500)
+                .body("error.message", is("Find multiple routers"))
+                .body("error.status", is(500));
     }
 
     @Test

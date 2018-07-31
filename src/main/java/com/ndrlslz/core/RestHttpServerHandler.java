@@ -4,21 +4,23 @@ import com.ndrlslz.handler.RequestHandler;
 import com.ndrlslz.json.Json;
 import com.ndrlslz.model.HttpServerRequest;
 import com.ndrlslz.model.HttpServerResponse;
+import com.ndrlslz.utils.HttpServerResponseBuilder;
 import com.ndrlslz.utils.HttpUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
-
-import java.nio.charset.Charset;
+import io.netty.handler.codec.http.HttpVersion;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import static com.ndrlslz.utils.ErrorBuilder.newBuilder;
-import static io.netty.buffer.Unpooled.copiedBuffer;
 import static io.netty.channel.ChannelFutureListener.CLOSE;
 import static io.netty.handler.codec.http.HttpResponseStatus.CONTINUE;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 
 public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServerRequest> {
+    private static final Log LOG = LogFactory.getLog(RestHttpServerHandler.class);
     private RequestHandler<HttpServerRequest, HttpServerResponse> requestHandler;
 
     RestHttpServerHandler(RequestHandler<HttpServerRequest, HttpServerResponse> requestHandler) {
@@ -34,21 +36,23 @@ public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServe
         HttpServerResponse response = requestHandler.handle(request);
 
         ctx.writeAndFlush(response);
-//
-//        throw new RuntimeException("test");
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        //TODO this is not working currently if above throw exception. it cannot write result to client.
-        cause.printStackTrace();
-        ctx
-                .writeAndFlush(copiedBuffer(Json.encode(newBuilder()
+        LOG.error("Internal Server Error", cause);
+
+        HttpServerResponse response = HttpServerResponseBuilder.internalServerError()
+                .withBody(Json.encode(newBuilder()
                         .withException(cause.getClass().getName())
                         .withMessage(cause.getMessage())
                         .withStatus(INTERNAL_SERVER_ERROR.code())
-                        .build()), Charset.defaultCharset()))
-                .addListener(CLOSE);
+                        .build()))
+                .withStatusCode(INTERNAL_SERVER_ERROR.code())
+                .withProtocolVersion(HttpVersion.HTTP_1_1)
+                .build();
+
+        ctx.writeAndFlush(response).addListener(CLOSE);
     }
 
     private static void send100Continue(ChannelHandlerContext ctx, HttpServerRequest request) {

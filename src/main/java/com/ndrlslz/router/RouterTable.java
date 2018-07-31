@@ -120,6 +120,16 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
                     .build();
         }
 
+        if (matchedRouters.size() > 1) {
+            return HttpServerResponseBuilder.internalServerError()
+                    .withRequest(request)
+                    .withBody(Json.encode(newBuilder()
+                            .withMessage("Find multiple routers")
+                            .withStatus(INTERNAL_SERVER_ERROR.code())
+                            .withUri(request.getUri())
+                    )).build();
+        }
+
         matchedRouters.forEach(router -> {
             Matcher matcher = router.getRegexPattern().matcher(request.getPath());
 

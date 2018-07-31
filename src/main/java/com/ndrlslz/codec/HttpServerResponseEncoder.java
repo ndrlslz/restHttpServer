@@ -42,9 +42,4 @@ public class HttpServerResponseEncoder extends MessageToMessageEncoder<HttpServe
 
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
-    }
 }
