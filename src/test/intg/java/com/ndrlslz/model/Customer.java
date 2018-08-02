@@ -1,9 +1,9 @@
-package com.ndrlslz.test;
+package com.ndrlslz.model;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class Customer {
-    private static AtomicInteger idCreator = new AtomicInteger();
+    public static AtomicInteger idCreator = new AtomicInteger();
     private int id;
     private String name;
     private String address;

@@ -2,8 +2,6 @@ package com.ndrlslz.utils;
 
 import com.ndrlslz.model.HttpServerRequest;
 import com.ndrlslz.model.HttpServerResponse;
-import io.netty.handler.codec.http.HttpHeaderNames;
-import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.util.AsciiString;
 

@@ -50,6 +50,12 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
         router.setPath(path);
         currentRouter = router;
 
+        if (isNull(currentRouter.getPath())) {
+            globalRouters.add(currentRouter);
+        } else {
+            routers.add(currentRouter);
+        }
+
         return this;
     }
 
@@ -64,9 +70,7 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
     }
 
     public RouterTable router() {
-        currentRouter = new Router();
-
-        return this;
+        return router(null);
     }
 
     public RouterTable get() {
@@ -90,11 +94,6 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
 
         currentRouter.setHandler(handler);
 
-        if (isNull(currentRouter.getPath())) {
-            globalRouters.add(currentRouter);
-        } else {
-            routers.add(currentRouter);
-        }
 
         currentRouter = null;
         return this;
@@ -130,23 +129,32 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
                     )).build();
         }
 
-        matchedRouters.forEach(router -> {
-            Matcher matcher = router.getRegexPattern().matcher(request.getPath());
+        Router router = matchedRouters.get(0);
 
-            if (matcher.find()) {
-                try {
-                    routerContext.request().getPathParams().clear();
-                    for (int i = 0; i < router.getGroups().size(); i++) {
-                        String key = router.getGroups().get(i);
-                        routerContext.request().getPathParams().put(key, matcher.group("param" + i));
-                    }
-                } catch (Exception exception) {
-                    throw new RestHttpServerException("Encounter error when retrieve path parameters", exception);
+        if (isNull(router.getHandler())) {
+            return HttpServerResponseBuilder.internalServerError()
+                    .withRequest(request)
+                    .withBody(Json.encode(newBuilder()
+                            .withMessage("Cannot find available handle")
+                            .withStatus(INTERNAL_SERVER_ERROR.code())
+                            .withUri(request.getUri())
+                    )).build();
+        }
+        Matcher matcher = router.getRegexPattern().matcher(request.getPath());
+
+        if (matcher.find()) {
+            try {
+                routerContext.request().getPathParams().clear();
+                for (int i = 0; i < router.getGroups().size(); i++) {
+                    String key = router.getGroups().get(i);
+                    routerContext.request().getPathParams().put(key, matcher.group("param" + i));
                 }
+            } catch (Exception exception) {
+                throw new RestHttpServerException("Encounter error when retrieve path parameters", exception);
             }
+        }
 
-            router.getHandler().handle(routerContext);
-        });
+        router.getHandler().handle(routerContext);
 
         HttpServerResponse response = routerContext.response();
 

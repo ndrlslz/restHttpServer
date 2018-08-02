@@ -1,4 +1,4 @@
-package com.ndrlslz.test;
+package com.ndrlslz.model;
 
 import java.util.ArrayList;
 import java.util.List;
