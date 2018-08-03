@@ -5,6 +5,7 @@ import com.ndrlslz.model.Customer;
 import com.ndrlslz.model.Customers;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class CustomerService {
@@ -47,4 +48,40 @@ public class CustomerService {
                 .filter(customer -> customer.getName().equals(name))
                 .findFirst();
     }
+
+    public Customer updateCustomerViaPut(int id, Customer customer) {
+        Optional<Customer> originCustomer = getCustomer(id);
+        if (originCustomer.isPresent()) {
+            Customer newCustomer = originCustomer.get();
+            newCustomer.setName(customer.getName());
+            newCustomer.setAddress(customer.getAddress());
+            newCustomer.setAge(customer.getAge());
+            return newCustomer;
+        } else {
+            return null;
+        }
+    }
+
+    public Customer updateCustomerViaPatch(int id, Customer customer) {
+        Optional<Customer> originCustomer = getCustomer(id);
+        if (originCustomer.isPresent()) {
+            Customer newCustomer = originCustomer.get();
+            updateIfNotNull(customer.getName(), newCustomer::setName);
+            updateIfNotNull(customer.getAddress(), newCustomer::setAddress);
+            updateIfNotNull(customer.getAge(), newCustomer::setAge);
+
+            return newCustomer;
+        }
+        return null;
+    }
+
+    private <T> void updateIfNotNull(T field, Function<T> function) {
+        if (Objects.nonNull(field)) {
+            function.apply(field);
+        }
+    }
+}
+
+interface Function<I> {
+    void apply(I input);
 }

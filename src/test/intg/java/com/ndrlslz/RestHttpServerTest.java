@@ -4,15 +4,16 @@ import com.ndrlslz.json.Json;
 import com.ndrlslz.model.Customer;
 import com.ndrlslz.service.CustomerService;
 import com.ndrlslz.utils.ErrorBuilder;
-import io.restassured.RestAssured;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Optional;
 
+import static io.restassured.RestAssured.get;
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.CoreMatchers.hasItems;
-import static org.hamcrest.CoreMatchers.is;
+import static java.lang.Integer.parseInt;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class RestHttpServerTest extends BaseIntegrationTest {
     private CustomerService customerService;
@@ -31,7 +32,7 @@ public class RestHttpServerTest extends BaseIntegrationTest {
             context.response().setBody(Json.encode(customerService.getCustomers()));
         });
 
-        RestAssured.get("/customers")
+        get("/customers")
                 .then()
                 .statusCode(200)
                 .body("customers.size()", is(2))
@@ -45,7 +46,7 @@ public class RestHttpServerTest extends BaseIntegrationTest {
         routerTable.get("/customers/{customer_id}").handler(context -> {
             String customerId = context.request().getPathParams().get("customer_id");
 
-            Optional<Customer> customer = customerService.getCustomer(Integer.parseInt(customerId));
+            Optional<Customer> customer = customerService.getCustomer(parseInt(customerId));
             if (customer.isPresent()) {
                 context.response().setBody(Json.encode(customer.get()));
             } else {
@@ -53,7 +54,7 @@ public class RestHttpServerTest extends BaseIntegrationTest {
             }
         });
 
-        RestAssured.get("/customers/1")
+        get("/customers/1")
                 .then()
                 .statusCode(200)
                 .body("name", is("Tom"))
@@ -65,7 +66,7 @@ public class RestHttpServerTest extends BaseIntegrationTest {
         routerTable.get("/customers/{customer_id}").handler(context -> {
             String customerId = context.request().getPathParams().get("customer_id");
 
-            Optional<Customer> customer = customerService.getCustomer(Integer.parseInt(customerId));
+            Optional<Customer> customer = customerService.getCustomer(parseInt(customerId));
             if (customer.isPresent()) {
                 context.response().setBody(Json.encode(customer.get()));
             } else {
@@ -77,7 +78,7 @@ public class RestHttpServerTest extends BaseIntegrationTest {
             }
         });
 
-        RestAssured.get("/customers/3")
+        get("/customers/3")
                 .then()
                 .statusCode(404)
                 .body("message", is("cannot find customer by id 3"))
@@ -97,7 +98,7 @@ public class RestHttpServerTest extends BaseIntegrationTest {
             }
         });
 
-        RestAssured.get("/customers?name=Tom")
+        get("/customers?name=Tom")
                 .then()
                 .statusCode(200)
                 .body("name", is("Tom"))
@@ -126,5 +127,66 @@ public class RestHttpServerTest extends BaseIntegrationTest {
                 .body("name", is("Sally"))
                 .body("age", is(30))
                 .body("id", is(3));
+
+        assertThat(customerService.getCustomers().getCustomers().size(), is(3));
+    }
+
+    @Test
+    public void shouldRemoveCustomer() {
+        routerTable.delete("/customers/{customer_id}").handler(context -> {
+            String customerId = context.request().getPathParams().get("customer_id");
+
+            customerService.removeCustomer(parseInt(customerId));
+        });
+
+        given()
+                .delete("/customers/1")
+                .then()
+                .statusCode(200);
+
+        assertThat(customerService.getCustomers().getCustomers().size(), is(1));
+    }
+
+    @Test
+    public void shouldUpdateCustomerGivenPutMethod() {
+        routerTable.put("/customers/{customer_id}").handler(context -> {
+            String customerId = context.request().getPathParams().get("customer_id");
+            Customer updateCustomerBody = Json.decode(context.request().getBodyAsString(), Customer.class);
+
+            Customer newCustomer = customerService.updateCustomerViaPut(parseInt(customerId), updateCustomerBody);
+            context.response().setBody(Json.encode(newCustomer));
+        });
+
+        Customer updateNameAndDeleteAddressRequest = new Customer("Jim", null, 20);
+        given()
+                .body(updateNameAndDeleteAddressRequest)
+                .put("/customers/1")
+                .then()
+                .statusCode(200);
+
+        assertThat(customerService.getCustomers().getCustomers().get(0).getName(), is("Jim"));
+        assertThat(customerService.getCustomers().getCustomers().get(0).getAddress(), is(nullValue()));
+    }
+
+    @Test
+    public void shouldUpdateCustomerGivenPatchMethod() {
+        routerTable.patch("/customers/{customer_id}").handler(context -> {
+            String customerId = context.request().getPathParams().get("customer_id");
+            Customer updateCustomerBody = Json.decode(context.request().getBodyAsString(), Customer.class);
+
+            Customer newCustomer = customerService.updateCustomerViaPatch(parseInt(customerId), updateCustomerBody);
+            context.response().setBody(Json.encode(newCustomer));
+        });
+
+        Customer updateAddressRequest = new Customer(null, "Chengdu", null);
+        given()
+                .body(updateAddressRequest)
+                .patch("/customers/1")
+                .then()
+                .statusCode(200);
+
+        assertThat(customerService.getCustomers().getCustomers().get(0).getName(), is("Tom"));
+        assertThat(customerService.getCustomers().getCustomers().get(0).getAddress(), is("Chengdu"));
+        assertThat(customerService.getCustomers().getCustomers().get(0).getAge(), is(20));
     }
 }

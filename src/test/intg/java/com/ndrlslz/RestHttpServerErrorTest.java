@@ -20,7 +20,18 @@ public class RestHttpServerErrorTest extends BaseIntegrationTest {
     }
 
     @Test
-    public void shouldReturnCannotFindRouterError() {
+    public void shouldReturnCannotFindRouterErrorGivenNoAnyRouters() {
+        get("/customers")
+                .then()
+                .statusCode(500)
+                .body("error.message", is("Cannot find available router"))
+                .body("error.status", is(500));
+    }
+
+    @Test
+    public void shouldReturnCannotFindRouterErrorGivenOnlyGlobalRouter() {
+        routerTable.router().handler(context -> {});
+
         get("/customers")
                 .then()
                 .statusCode(500)

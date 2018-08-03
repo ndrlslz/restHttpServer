@@ -7,9 +7,9 @@ public class Customer {
     private int id;
     private String name;
     private String address;
-    private int age;
+    private Integer age;
 
-    public Customer(String name, String address, int age) {
+    public Customer(String name, String address, Integer age) {
         this.id = idCreator.incrementAndGet();
         this.name = name;
         this.address = address;
@@ -40,11 +40,21 @@ public class Customer {
         this.address = address;
     }
 
-    public int getAge() {
+    public Integer getAge() {
         return age;
     }
 
-    public void setAge(int age) {
+    public void setAge(Integer age) {
         this.age = age;
+    }
+
+    @Override
+    public String toString() {
+        return "Customer{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", address='" + address + '\'' +
+                ", age=" + age +
+                '}';
     }
 }

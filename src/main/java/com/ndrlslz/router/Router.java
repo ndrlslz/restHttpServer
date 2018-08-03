@@ -5,6 +5,7 @@ import io.netty.handler.codec.http.HttpMethod;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,7 +25,9 @@ public class Router {
 
     public void setPath(String path) {
         this.path = path;
-        setRegexPattern(path);
+        if (Objects.nonNull(path)) {
+            setRegexPattern(path);
+        }
     }
 
     public HttpMethod getHttpMethod() {
@@ -59,7 +62,7 @@ public class Router {
         groups = new ArrayList<>();
         int index = 0;
         while (m.find()) {
-            m.appendReplacement(sb, format("(?<param%s>[^/]+)", index));
+            m.appendReplacement(sb, String.format("(?<param%s>[^/]+)", index));
             String group = m.group();
 
             groups.add(group.substring(1, group.length() - 1));

@@ -41,7 +41,7 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
             httpServerResponse.setProtocolVersion(httpServerRequest.getProtocolVersion());
             httpServerResponse.headers().set(CONTENT_TYPE, APPLICATION_JSON.toString());
             httpServerResponse.setStatusCode(OK.code());
-            httpServerRequest.setDecoderResult(context.request().decoderResult());
+            httpServerResponse.setDecoderResult(context.request().decoderResult());
         });
     }
 
@@ -64,6 +64,8 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
     }
 
     public RouterTable method(HttpMethod method) {
+        Objects.requireNonNull(currentRouter, "please define router for this method");
+
         currentRouter.setHttpMethod(method);
 
         return this;
@@ -89,11 +91,34 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
         return router(path, HttpMethod.POST);
     }
 
+    public RouterTable delete() {
+        return router().method(HttpMethod.DELETE);
+    }
+
+    public RouterTable delete(String path) {
+        return router(path).method(HttpMethod.DELETE);
+    }
+
+    public RouterTable put() {
+        return router().method(HttpMethod.PUT);
+    }
+
+    public RouterTable put(String path) {
+        return router(path).method(HttpMethod.PUT);
+    }
+
+    public RouterTable patch() {
+        return router().method(HttpMethod.PATCH);
+    }
+
+    public RouterTable patch(String path) {
+        return router(path).method(HttpMethod.PATCH);
+    }
+
     public RouterTable handler(Handler<RouterContext> handler) {
         Objects.requireNonNull(currentRouter, "please define router for this handle");
 
         currentRouter.setHandler(handler);
-
 
         currentRouter = null;
         return this;
@@ -103,7 +128,10 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
     public HttpServerResponse handle(HttpServerRequest request) {
         RouterContext routerContext = new RouterContext(request, new HttpServerResponse());
 
-        globalRouters.forEach(router -> router.getHandler().handle(routerContext));
+        globalRouters
+                .stream()
+                .filter(routerThatMatchMethodOf(request))
+                .forEach(router -> router.getHandler().handle(routerContext));
 
         List<Router> matchedRouters = this.routers.stream()
                 .filter(routerThatMatchMethodOf(request))
