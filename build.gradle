@@ -1,5 +1,6 @@
 apply plugin: 'java'
 apply plugin: 'idea'
+apply plugin: "jacoco"
 
 dependencies {
     compile 'io.netty:netty-all:4.1.10.Final'
@@ -15,12 +16,22 @@ repositories {
 }
 
 task wrapper(type: Wrapper) {
-   gradleVersion = '3.0'
+    gradleVersion = '4.0'
 }
 
 configurations {
     integrationTestCompile.extendsFrom testCompile
     integrationTestRuntime.extendsFrom testRuntime
+}
+
+afterEvaluate {
+    idea {
+        module {
+            testSourceDirs = testSourceDirs + sourceSets.integrationTest.allSource.srcDirs.flatten() as LinkedHashSet
+            outputDir = new File("${buildDir}/classes/idea/main")
+            testOutputDir = new File("${buildDir}/classes/idea/test")
+        }
+    }
 }
 
 sourceSets {
@@ -45,9 +56,53 @@ sourceSets {
     }
 }
 
+
 task integrationTest(type: Test) {
     testClassesDir = sourceSets.integrationTest.output.classesDir
     classpath = sourceSets.integrationTest.runtimeClasspath
 }
+
+jacocoTestReport {
+    sourceSets sourceSets.main
+    executionData test, integrationTest
+
+    afterEvaluate {
+        classDirectories = files(classDirectories.files.collect {
+            fileTree(dir: it,
+                    excludes: ['com/ndrlslz/model']
+            )
+        })
+    }
+}
+
+jacocoTestCoverageVerification {
+    sourceSets sourceSets.main
+    executionData test, integrationTest
+
+    afterEvaluate {
+        classDirectories = files(classDirectories.files.collect {
+            fileTree(dir: it,
+                    excludes: ['com/ndrlslz/model']
+            )
+        })
+    }
+
+    violationRules {
+        rule {
+            limit {
+                counter = 'BRANCH'
+                minimum = 0.75
+            }
+
+            limit {
+                counter = 'LINE'
+                minimum = 0.85
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
+jacocoTestCoverageVerification.dependsOn jacocoTestReport
 
 check.dependsOn integrationTest
