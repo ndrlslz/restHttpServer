@@ -8,6 +8,7 @@ dependencies {
     compile 'com.google.code.gson:gson:2.8.5'
 
     testCompile 'junit:junit:4.12'
+    testCompile 'org.mockito:mockito-core:2.21.0'
 }
 
 
@@ -91,12 +92,12 @@ jacocoTestCoverageVerification {
         rule {
             limit {
                 counter = 'BRANCH'
-                minimum = 0.75
+                minimum = 0.90
             }
 
             limit {
                 counter = 'LINE'
-                minimum = 0.85
+                minimum = 0.90
             }
         }
     }

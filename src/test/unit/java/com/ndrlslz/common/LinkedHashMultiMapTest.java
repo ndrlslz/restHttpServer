@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class LinkedHashMultiMapTest {
@@ -61,10 +62,30 @@ public class LinkedHashMultiMapTest {
     }
 
     @Test
+    public void shouldGetNullValue() {
+        assertThat(map.get("key"), is(nullValue()));
+    }
+
+    @Test
+    public void shouldGEtNullValueGivenEmptyCollection() {
+        map.set("key1", setOf());
+
+        assertThat(map.get("key1"), is(nullValue()));
+    }
+
+    @Test
     public void shouldGetDefaultValueByKey() {
         map.set("key1", setOf("123", "456"));
 
         assertThat(map.get("key3", "default"), is("default"));
+    }
+
+    @Test
+    public void shouldNotGetDefaultValueGivenValueExists() {
+        map.set("key1", "value1");
+
+        assertThat(map.get("key1", "default"), is("value1"));
+
     }
 
     @Test

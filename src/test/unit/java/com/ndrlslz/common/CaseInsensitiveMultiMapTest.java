@@ -17,6 +17,14 @@ public class CaseInsensitiveMultiMapTest {
         map.set("Connection", "keep-alive");
 
         assertThat(map.containsKey("connection"), is(true));
+        assertThat(map.containsKey("Connection"), is(true));
+    }
+
+    @Test
+    public void notContainsKey() {
+        map.set("Connection", "keep-alive");
+
+        assertThat(map.containsKey("key"), is(false));
     }
 
     @Test

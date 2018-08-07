@@ -10,7 +10,7 @@ public class CaseInsensitiveMultiMap<V> extends LinkedHashMultiMap<CharSequence,
 
     @Override
     public boolean containsKey(CharSequence key) {
-        return upperKeyMultiMap.containsKey(key.toString().toLowerCase()) || super.containsKey(key);
+        return upperKeyMultiMap.containsKey(key.toString().toLowerCase());
     }
 
     @Override

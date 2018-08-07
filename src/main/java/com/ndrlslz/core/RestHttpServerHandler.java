@@ -1,5 +1,6 @@
 package com.ndrlslz.core;
 
+import com.ndrlslz.exception.RestHttpServerException;
 import com.ndrlslz.handler.RequestHandler;
 import com.ndrlslz.json.Json;
 import com.ndrlslz.model.HttpServerRequest;
@@ -13,6 +14,8 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpVersion;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.util.Objects;
 
 import static com.ndrlslz.utils.ErrorBuilder.newBuilder;
 import static io.netty.channel.ChannelFutureListener.CLOSE;
@@ -31,6 +34,10 @@ public class RestHttpServerHandler extends SimpleChannelInboundHandler<HttpServe
     protected void channelRead0(ChannelHandlerContext ctx, HttpServerRequest request) {
         if (HttpUtils.is100ContinueExpected(request)) {
             send100Continue(ctx, request);
+        }
+
+        if (Objects.isNull(requestHandler)) {
+            throw new RestHttpServerException("Request handler cannot be null");
         }
 
         HttpServerResponse response = requestHandler.handle(request);
