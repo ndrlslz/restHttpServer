@@ -1,6 +1,7 @@
 package com.ndrlslz.codec;
 
 import com.ndrlslz.model.HttpServerResponse;
+import com.ndrlslz.utils.HttpUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
@@ -40,6 +41,10 @@ public class HttpServerResponseEncoder extends MessageToMessageEncoder<HttpServe
 
         httpServerResponse.headers().each((key, value) -> response.headers().set(key, value));
 
-        ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        ctx.write(response);
+
+        if (!HttpUtils.isKeepAlive(httpServerResponse)) {
+            ctx.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
+        }
     }
 }

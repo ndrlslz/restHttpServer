@@ -27,6 +27,23 @@ public class RestHttpServerTest extends BaseIntegrationTest {
     }
 
     @Test
+    public void shouldGetCustomersWithoutKeepAlive() {
+        routerTable.get("/customers").handler(context -> {
+            context.response().setBody(Json.encode(customerService.getCustomers()));
+        });
+
+        given()
+                .header("Connection", "close")
+                .get("/customers")
+                .then()
+                .statusCode(200)
+                .body("customers.size()", is(2))
+                .body("customers.name", hasItems("Tom", "Nick"))
+                .body("customers.age", hasItems(20, 28))
+                .body("customers.id", hasItems(1, 2));
+    }
+
+    @Test
     public void shouldGetCustomers() {
         routerTable.get("/customers").handler(context -> {
             context.response().setBody(Json.encode(customerService.getCustomers()));

@@ -188,6 +188,8 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
 
         if (HttpUtils.isKeepAlive(request)) {
             response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE.toString());
+        } else {
+            response.headers().set(CONNECTION, HttpHeaderValues.CLOSE.toString());
         }
 
         return response;

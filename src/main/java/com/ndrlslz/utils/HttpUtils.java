@@ -7,11 +7,18 @@ import io.netty.handler.codec.http.HttpHeaderValues;
 import io.netty.handler.codec.http.HttpVersion;
 
 import static io.netty.handler.codec.http.HttpHeaderNames.CONNECTION;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 public class HttpUtils {
     public static boolean isKeepAlive(HttpServerMessage message) {
-        return message.headers().get(CONNECTION) != null &&
-                message.headers().get(CONNECTION).contentEquals(HttpHeaderValues.KEEP_ALIVE);
+        if (message.getProtocolVersion().compareTo(HttpVersion.HTTP_1_1) >= 0) {
+            return isNull(message.headers().get(CONNECTION)) ||
+                    !message.headers().get(CONNECTION).equalsIgnoreCase(HttpHeaderValues.CLOSE.toString());
+        } else {
+            return nonNull(message.headers().get(CONNECTION)) &&
+                    message.headers().get(CONNECTION).equalsIgnoreCase(HttpHeaderValues.KEEP_ALIVE.toString());
+        }
     }
 
     public static boolean is100ContinueExpected(HttpServerRequest request) {
