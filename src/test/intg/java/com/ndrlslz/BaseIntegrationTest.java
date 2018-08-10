@@ -1,6 +1,7 @@
 package com.ndrlslz;
 
 import com.ndrlslz.core.RestHttpServer;
+import com.ndrlslz.core.RestHttpServerOptions;
 import com.ndrlslz.router.RouterTable;
 import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
@@ -17,7 +18,7 @@ public abstract class BaseIntegrationTest {
         routerTable = new RouterTable();
 
         httpServer = RestHttpServer
-                .create()
+                .create(new RestHttpServerOptions().withWorkerThreadCount(20))
                 .requestHandler(routerTable)
                 .listen(PORT);
 
