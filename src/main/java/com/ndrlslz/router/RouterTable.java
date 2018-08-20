@@ -35,6 +35,10 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
         routers = new ArrayList<>();
         globalRouters = new ArrayList<>();
 
+        defaultGlobalRouter();
+    }
+
+    private void defaultGlobalRouter() {
         router().handler(context -> {
             HttpServerRequest httpServerRequest = context.request();
             HttpServerResponse httpServerResponse = context.response();
@@ -128,46 +132,54 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
     public HttpServerResponse handle(HttpServerRequest request) {
         RouterContext routerContext = new RouterContext(request, new HttpServerResponse());
 
-        globalRouters
-                .stream()
-                .filter(routerThatMatchMethodOf(request))
-                .forEach(router -> router.getHandler().handle(routerContext));
+        handleByGlobalRouters(request, routerContext);
 
-        List<Router> matchedRouters = this.routers.stream()
-                .filter(routerThatMatchMethodOf(request))
-                .filter(routerThatMatchPathOf(request)).collect(Collectors.toList());
+        List<Router> matchedRouters = matchedRouters(request);
 
         if (matchedRouters.isEmpty()) {
-            return HttpServerResponseBuilder.internalServerError()
-                    .withRequest(request)
-                    .withBody(Json.encode(newBuilder()
-                            .withMessage("Cannot find available router")
-                            .withStatus(INTERNAL_SERVER_ERROR.code())
-                            .withUri(request.getUri())))
-                    .build();
+            return InternalServerError(request, "Cannot find available router");
         }
 
         if (matchedRouters.size() > 1) {
-            return HttpServerResponseBuilder.internalServerError()
-                    .withRequest(request)
-                    .withBody(Json.encode(newBuilder()
-                            .withMessage("Find multiple routers")
-                            .withStatus(INTERNAL_SERVER_ERROR.code())
-                            .withUri(request.getUri())
-                    )).build();
+            return InternalServerError(request, "Find multiple routers");
         }
 
         Router router = matchedRouters.get(0);
 
         if (isNull(router.getHandler())) {
-            return HttpServerResponseBuilder.internalServerError()
-                    .withRequest(request)
-                    .withBody(Json.encode(newBuilder()
-                            .withMessage("Cannot find available handle")
-                            .withStatus(INTERNAL_SERVER_ERROR.code())
-                            .withUri(request.getUri())
-                    )).build();
+            return InternalServerError(request, "Cannot find available handle");
         }
+
+        setPathParametersForRouterContext(request, routerContext, router);
+
+        router.getHandler().handle(routerContext);
+
+        HttpServerResponse response = routerContext.response();
+
+        setKeepAliveHeader(request, response);
+
+        return response;
+    }
+
+    private HttpServerResponse InternalServerError(HttpServerRequest request, String errorMessage) {
+        return HttpServerResponseBuilder.internalServerError()
+                .withRequest(request)
+                .withBody(Json.encode(newBuilder()
+                        .withMessage(errorMessage)
+                        .withStatus(INTERNAL_SERVER_ERROR.code())
+                        .withUri(request.getUri())))
+                .build();
+    }
+
+    private void setKeepAliveHeader(HttpServerRequest request, HttpServerResponse response) {
+        if (HttpUtils.isKeepAlive(request)) {
+            response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE.toString());
+        } else {
+            response.headers().set(CONNECTION, HttpHeaderValues.CLOSE.toString());
+        }
+    }
+
+    private void setPathParametersForRouterContext(HttpServerRequest request, RouterContext routerContext, Router router) {
         Matcher matcher = router.getRegexPattern().matcher(request.getPath());
 
         if (matcher.find()) {
@@ -181,18 +193,19 @@ public class RouterTable implements RequestHandler<HttpServerRequest, HttpServer
                 throw new RestHttpServerException("Encounter error when retrieve path parameters", exception);
             }
         }
+    }
 
-        router.getHandler().handle(routerContext);
+    private List<Router> matchedRouters(HttpServerRequest request) {
+        return this.routers.stream()
+                .filter(routerThatMatchMethodOf(request))
+                .filter(routerThatMatchPathOf(request)).collect(Collectors.toList());
+    }
 
-        HttpServerResponse response = routerContext.response();
-
-        if (HttpUtils.isKeepAlive(request)) {
-            response.headers().set(CONNECTION, HttpHeaderValues.KEEP_ALIVE.toString());
-        } else {
-            response.headers().set(CONNECTION, HttpHeaderValues.CLOSE.toString());
-        }
-
-        return response;
+    private void handleByGlobalRouters(HttpServerRequest request, RouterContext routerContext) {
+        globalRouters
+                .stream()
+                .filter(routerThatMatchMethodOf(request))
+                .forEach(router -> router.getHandler().handle(routerContext));
     }
 
     private Predicate<Router> routerThatMatchMethodOf(HttpServerRequest request) {

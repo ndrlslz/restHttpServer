@@ -7,6 +7,7 @@ import com.ndrlslz.model.AsyncResult;
 import com.ndrlslz.model.HttpServerRequest;
 import com.ndrlslz.model.HttpServerResponse;
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -52,16 +53,16 @@ public class RestHttpServer {
         workerGroup = new NioEventLoopGroup();
         AsyncResult<RestHttpServer> result;
         try {
-            ServerBootstrap b = new ServerBootstrap();
-            b.group(bossGroup, workerGroup)
+            ServerBootstrap bootstrap = new ServerBootstrap();
+            bootstrap.childOption(ChannelOption.TCP_NODELAY, true);
+            bootstrap.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new RestHttpServerInitializer(requestHandler, requestHandlerGroup));
 
-            b.bind(port).sync();
+            bootstrap.bind(port).sync();
 
             result = AsyncResult.success(this);
-
         } catch (InterruptedException e) {
             RestHttpServerException restHttpServerException = new RestHttpServerException("Rest http server startup fail.", e);
             result = AsyncResult.fail(restHttpServerException);
