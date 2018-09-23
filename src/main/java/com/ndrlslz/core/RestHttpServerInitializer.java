@@ -19,7 +19,8 @@ public class RestHttpServerInitializer extends ChannelInitializer {
     private RequestHandler<HttpServerRequest, HttpServerResponse> requestHandler;
     private EventExecutorGroup requestHandlerGroup;
 
-    RestHttpServerInitializer(RequestHandler<HttpServerRequest, HttpServerResponse> requestHandler, EventExecutorGroup requestHandlerGroup) {
+    RestHttpServerInitializer(RequestHandler<HttpServerRequest, HttpServerResponse> requestHandler,
+                              EventExecutorGroup requestHandlerGroup) {
         this.requestHandler = requestHandler;
         this.requestHandlerGroup = requestHandlerGroup;
     }
